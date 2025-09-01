@@ -879,6 +879,28 @@ P2:\ \ \max_{\qty{\tau_i,\varepsilon_i,u_i,v_i}_{i=1}^N,\qty{\mathbf{W}_j}_{j=1}
 $$
 ​	Among these constraints, the non-convex constraint $\text{Rank}(\mathbf{W}_j)=1$ can be strategically relaxed, and this problem $P2$ can be solved by CVX solver.
 
+##### · *Joint AP Selection and Power Allocation for Unicast-Multicast Cell-Free Massive MIMO*
+
+###### · Abstract
+
+​	This paper focus on a cell-free massive MIMO system enabled to simultaneously unicast and multi-group multicast. The precise achievable downlink spectral efficiency (SE) of unicast and multicast users are derived from ZF and maximum precoding design. This paper formulates a WSE maximization problem with constraints like transmit power, fronthual capacity and QoS to jointly optimize the APs selection and power allocation, then, we reformulate this non-convex problem into a easier structure and an accelerate projected gradient (APG)-based algorithm is adopted to obtain the near-optimal solutions. As comparison, SCA-based algorithm is implemented, and the results indicate the proposed joint optimization approach enhances the WSE in various environments. Moreover, APG-based algorithm reduce computational complexity hugely with considerable performance.
+
+###### · System Model
+
+​	We consider a Cell-Free massive MIMO (CF-mMIMO) system with joint unicast and multi-group multicast transmission, this system consists of $N$ APs, each equipped with $L$ antennas, simultaneously serving $U$ unicast users and $M$ multicast groups, where $m$-th group includes $K_m$ users. The sets of $N$ APs, $U$ unicast users, $M$ multicast groups and $K_m$ users of $m$-th are denoted by $\mathcal{N,U,M}$ and $\mathcal{K}_m$, respectively. The channel vector between the $u$-th unicast user and the $n$-th AP, $u\in\mathcal{U},n\in\mathcal{N}$ is
+$$
+\mathbf{c}_{n,u}=\beta_{n,u}^{1/2}\mathbf{h}_{n,u}\in\mathbb{C}^{L\times1},
+$$
+and the channel between the $k_m$-th multicast user of the $m$-th multicast group and $n$-th AP $k_m\in\mathcal{K}_m,m\in\mathcal{M},n\in\mathcal{N}$ is
+$$
+\mathbf{t}_{n,m,k}=\bar{\beta}_{n,m,k}^{1/2}\mathbf{h}_{n,m,k}\in\mathbb{C}^{L\times1}
+$$
+where $\beta_{n,u}$ and $\bar{\beta}_{n,m,k}$ are the according large-scale fading coefficients, and $\mathbf{h}_{n,u}\sim\mathcal{CN}\pqty{\mathbf{0,I}_L}$ and $\mathbf{h}_{n,m,k}\sim\mathcal{CN}\pqty{\mathbf{0,I}_L}$ are the according small-scale fading vectors.
+
+
+
+
+
 #### Semantic Communication
 
 ##### · *CSDN Blog Based on Paper -- Semantic Communications: overview, open issues, and Future Research Direction*

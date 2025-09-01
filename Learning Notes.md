@@ -139,7 +139,7 @@ $$
 
 ​	最佳接收机只是将含有噪声的接收信号投影到信号方向上，即最大比合并或接收波束成形。这样能够适应不同的接收时延从而使接受信号相长合并，提供$n_r$倍功率增益，最终得到信道容量为
 $$
-C=\log\pqty{1+\frac{P\norm{\mathbf{h}}^2}{N_0}}=\log\pqty{1+\frac{Pa^2n_r}{N_0}}
+C=\log\pqty{1+\frac{P\norm{\mathbf{h}}^2}{N_0}}=\log\pqty{1+\frac{Pa^2n_r}{N_0}}\ \ \text{bits/s/Hz}
 $$
 ​	需要注意的是，SIMO只提供了功率增益没有提供自由度增益。
 
@@ -149,6 +149,61 @@ $$
 $$
 h_{ik}=a\exp\pqty{\frac{-j2\pi d_{ik}}{\lambda_c}}
 $$
+其中$d_{ik}$是各天线间的距离，$a$是衰减因子（这里也假设各天线对之间的衰减因子相同）。不妨同样认为天线阵列尺寸明显小于收发天线间的距离，则$d_{ik}$可以被表示为
+$$
+d_{ik}=d+(i-1)\Delta_r\lambda_c\cos\phi_r-(k-1)\Delta_t\lambda_c\cos\phi_t
+$$
+其中$d$是线性收发天线阵列中的第一个发射天线到第一个接收天线间的距离，而$\phi_t$和$\phi_r$则分别表示为发射天线阵列和接收天线阵列上的视距信道入射角。为简化式子，分别定义$\Omega_t\triangleq\cos\phi_t$和$\Omega_r\triangleq\cos\phi_r$并代入$h_{ik}$得到
+$$
+h_{ik}=a\exp\pqty{\frac{-j2\pi d}{\lambda_c}}\cdot\exp\pqty{-j2\pi\pqty{i-1}\Delta_r\Omega_r}\cdot\exp\pqty{j2\pi\pqty{k-1}\Delta_t\Omega_t}
+$$
+进而可以导出信道矩阵$\mathbf{H}$为
+$$
+\mathbf{H}=a\sqrt{n_tn_r}\exp\pqty{\frac{-j2\pi d}{\lambda_c}}\mathbf{e}_r\pqty{\Omega_r}\mathbf{e}_t\pqty{\Omega_t}^*
+$$
+其中$\mathbf{e}_r\pqty{\cdot}$和$\mathbf{e}_t\pqty{\cdot}$则参考SIMO和MIS中的单位空间特征图，$\sqrt{n_tn_r}$是为了解决$\mathbf{e}_r$和$\mathbf{e}_t$自带的$\sqrt{n_r}$和$\sqrt{n_t}$。通过$\mathbf{e}_r\pqty{\Omega_r}\mathbf{e}_t\pqty{\Omega_t}^*$则可构造MIMO的单位空间特征图，便于理解可以认为是多个MISO或SIMO系统的叠加。显然$\mathbf{H}$秩为1，且有一个非零特征值为$\lambda_1=a\sqrt{n_tn_r}$，则该信道的信道容量为
+$$
+C=\log\pqty{1+\frac{Pa^2n_tn_r}{N_0}}\ \ \text{bits/s/Hz}
+$$
+​	需要注意的是，即使有多副收发天线组成天线阵列，该通信系统的DoF仍旧是一维的（由于信号最终投影在一维空间）。$n_tn_r$是功率增益因子，单发射天线时，接收机采用接收波束成形即可获得增益；单接收天线时，采用发射波束成形即可获得增益；多发射天线和多接收天线下，系统可同时受益于发射波束成形和接收波束成形。最终，视距信道下，MIMO系统仅提供了功率增益，未提供DoF增益。
+
+**地理上离散的天线阵列**：之前较为密集的MIMO阵列都无法取得DoFs增益，这里研究地理上离散的天线阵列以获得DoFs的增益。假设两发射天线，其间距与其与接收天线阵列的距离可比拟，且他们到接收天线阵列都只有一条直射（LoS）信道，两条直射信道分别有衰减因子和入射角为$a_1$，$\phi_{r1}$和$a_2$，$\phi_{r2}$。进一步假设发射天线的信号时延扩展远小于$1/W$，则可以继续使用上文的建模，得到发射天线$k$发射信号到接收天线阵列的空间特征图为
+$$
+\mathbf{h}_k=a_k\sqrt{n_r}\exp\pqty{\frac{-j2\pi d_{1k}}{\lambda_c}}\mathbf{e}_r\pqty{\Omega_{rk}},k=1,2,
+$$
+其中$d_{1k}$是第$k$个发射天线到接收阵列中的第1个接收天线的距离，$\Omega_{rk}$和$\mathbf{e}_r\pqty{\cdot}$参考之前的定义即可。
+
+观察$\mathbf{e}_r\pqty{\Omega_{rk}}$的原函数向量，除第一个元素外，每一个元素的周期应该为$\mathrm{T}=2\pi/2\pi\pqty{n_{rk}-i}\Delta_r=1/\pqty{n_{rk}-i}\Delta_r$，因此，其中周期最大的为$\mathrm{T}_\max=1/\Delta_r$，最小的为$\mathrm{T}_\min=1/\pqty{n_{rk}-1}\Delta_r$，由于要考虑$\mathbf{e}_r\pqty{\cdot}$整个的周期，函数向量内各元素的周期最小公约数为$1/\Delta_r$，则$\mathbf{e}_r\pqty{\cdot}$以$\Omega_{rk}$为变量的函数的周期应该为$1/\Delta_r$（这里强调以$\Omega_{rk}$为变量是为便于后续求解两个阵列的入射角之差是否为$1/\Delta_r$周期的倍数，排除空间特征向量重叠的可能性）。当满足$\Omega_r\triangleq\Omega_{r2}-\Omega_{r1}\neq0,\text{mod}\frac{1}{\Delta_r}$时， $\mathbf{H}=[\mathbf{h}_1,\mathbf{h}_2]$则各列不同且线性无关，从而可以得到$\mathbf{H}$有两个非零特征向量$\lambda_1^2$，$\lambda_2^2$，产生了两个自由度。
+
+尽管满足$\Omega_r\neq0$后得到的$\mathbf{H}$已经是满秩矩阵，但是该矩阵仍可能为病态矩阵（矩阵系数的微小变化对最后的求解影响很大），因此还需从方向角的距离进一步研究实现$\mathbf{H}$良矩阵的必要条件，以实现空间自由度的高效利用。
+
+$\mathbf{H}$矩阵的好坏取决于两个发射天线的空间特征图的一致性，一致性越低则$\mathbf{H}$状态越好。两个空间特征图间的差角$\theta$满足
+$$
+\abs{\cos\theta}\triangleq\abs{\mathbf{e}_r\pqty{\Omega_{r1}}^*\mathbf{e}_r\pqty{\Omega_{r2}}}
+$$
+注意到$\mathbf{e}_r\pqty{\Omega_{r1}}^*\mathbf{e}_r\pqty{\Omega_{r2}}$只取决于$\Omega_r$，从而可以定义
+$$
+\begin{align}
+f_r\pqty{\Omega_r}
+&\triangleq\mathbf{e}_r\pqty{\Omega_{r1}}^*\mathbf{e}_r\pqty{\Omega_{r2}}\\
+&=\frac{1}{n_r}\sum_{k=0}^{n_r-1}\exp\pqty{j2\pi\Delta_r\Omega_rk}\\
+&=\frac{1}{n_r}\exp\pqty{j\pi\Delta_r\Omega_r\pqty{n_r-1}}\sum_{k=1,3,5,\cdots}^{2n_r-1}\exp\pqty{j\pi\Delta_r\Omega_r\pqty{k-n_r}}\\
+&=\frac{1}{n_r}\exp\pqty{j\pi\Delta_r\Omega_r\pqty{n_r-1}}\frac{\exp\pqty{j\pi\Delta_r\Omega_r\pqty{1-n_r}}\pqty{1-\exp\pqty{2j\pi\Delta_r\Omega_rn_r}}}{1-\exp\pqty{2j\pi\Delta_r\Omega_r}}\\
+&=\frac{1}{n_r}\exp\pqty{j\pi\Delta_r\Omega_r\pqty{n_r-1}}\frac{\exp\pqty{-j\pi\Delta_r\Omega_rn_r}-\exp\pqty{j\pi\Delta_r\Omega_rn_r}}{\exp\pqty{-j\pi\Delta_r\Omega_r}-\exp\pqty{j\pi\Delta_r\Omega_r}}\\
+&=\frac{1}{n_r}\exp\pqty{j\pi\Delta_r\Omega_r\pqty{n_r-1}}\frac{\sin\pqty{\pi\Delta_r\Omega_rn_r}}{\sin\pqty{\pi\Delta_r\Omega_r}}\\
+&=\frac{1}{n_r}\exp\pqty{j\pi\Delta_r\Omega_r\pqty{n-1}}\frac{\sin\pqty{\pi L_r\Omega_r}}{\sin\pqty{\pi L_r\Omega_r/n_r}}
+\end{align}
+$$
+其中$L_r\triangleq n_r\Delta_r$是归一化的接收天线阵列的长度。因此
+$$
+\abs{\cos\theta}=\abs{f_r\pqty{\Omega_r}}=\frac{1}{n_r}\abs{\frac{\sin\pqty{\pi L_r\Omega_r}}{\sin\pqty{\pi L_r\Omega_r/n_r}}}
+$$
+信道矩阵$\mathbf{H}$的状态取决于$\cos\theta$，这里不妨假设衰减因子相同（或接近）$a_1=a_2=a$，则矩阵$\mathbf{H}$的奇异平方为
+$$
+\lambda_1^2=a^2n_r\pqty{1+\abs{\cos\theta}},\lambda_2^2=a^2n_r\pqty{1+\abs{\cos\theta}}
+$$
+条件数则可相应地表示为$\frac{\lambda_1}{\lambda_2}=\sqrt{\frac{1+\abs{\cos\theta}}{1-\abs{\cos\theta}}}$，从中可以看出，当$\abs{\cos\theta}\approx1$时，信道矩阵$\mathbf{H}$为病态矩阵，否则为良矩阵。进一步分析，当$\cos\theta=1$时，$\abs{\frac{\sin\pqty{\pi L_r\Omega_r}}{\sin\pqty{\pi L_r\Omega_r/n_r}}}$需要为$n_r$，根据取极限的方式，该式只有在$\pi L_r\Omega_r$趋近于0，或者直接的$\Omega_r=\Omega_{r2}-\Omega_{r1}$趋近于0时满足该式为$n_r$，考虑到实际中$\Omega_{r1}$和$\Omega_{r2}$的取值范围有限，所以可以基本说明，一定范围内，$\Omega_{r1}$和$\Omega_{r2}$差异越大时，信道矩阵$\mathbf{H}$状态越好。
+
 
 
 
@@ -176,9 +231,11 @@ $$
 
 
 
+---
+
 ### 计算机基础
 
-##### · Markdown
+#### · Markdown
 
 ​	Markdown语法是一种非常实用的标记性语言，对于日常科研和论文撰写来说，能够非常良好地充当论文、教材阅读和论文写作的桥梁，相较正常的文字输入，Markdown向我们提供了更加多样且便捷的文本输入方式，同时还能兼容LaTeX的公式语法，这里以Typora为例展示Markdown的部分实用语法（需要注意其中一些快捷键无法在Typora之外的软件正常使用）。
 
@@ -190,7 +247,7 @@ $$
 6. 行内代码和公式：代码`int`，公式$E=mc^2$
 7. 段落代码和公式：可以通过行内公式进行引用$(1.1)$
 
-```C++
+```c++
 ## 代码
 int main()
 {
@@ -211,10 +268,57 @@ $$
 
 [^1]: 引用对应注释
 
-10. 链接：[Markdown语法学习]([12分钟学会Markdown｜附Typora使用方法_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Fg411j7CW/))
+10. 链接：[Markdown语法学习视频]([12分钟学会Markdown｜附Typora使用方法_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Fg411j7CW/))
 11. 目录：在任意地方单开一段，然后输入“[TOC]”
 
-##### · Git
+#### · Missing Class
+
+**Shell**
+
+​	在Shell中使用echo可以打印出参数中的内容，例如
+
+```shell
+echo Hello
+>>> Hello
+```
+
+​	Shell中的路径是一组被分割的目录，在Linux和macOS上使用`/`分割，且根目录为`/`；而Windows上使用`\`分割，且每个盘都有一个根目录`C:\`。若为Linux系统，则以`/`开头是为绝对路径，其他情况下都是相对路径（相对于当前工作目录下的路径，当前工作目录可以由`pwd`命令获取）。切换目录时使用`cd`命令，`.`代表本级目录（当前工作目录），`..`代表上级目录。查看当前工作目录下包含哪些文件使用`ls`命令。Shell中都会实时显示当前工作目录。
+
+**注意**：*当未明确指定目录时，目录通常在当前工作目录下运行，因此，在执行程序时应当确认是否希望在当前目录下执行。*
+
+```shell
+pwd
+>>> C:\Users\Simon\documents\CppProjects\task0
+------------------------------------
+ls
+>>>	helloworld.cpp
+	helloworld.exe
+
+ls -l [path]
+drwxr-xr-x 1 missing  users  4096 Jun 15  2019 missing
+------------------------------------
+cd ..
+C:\Users\Simon\documents\CppProjects
+```
+
+​	`ls -l [path]`命令可以给出指定路径下的文件列表，且文件信息 也更加详细。`d`代表是一个目录，后边紧接着为9个字符，每三个字符`rwx`一组，分别代表读取权限、写入权限和搜索权限，若为`-`则对应用户无该权限。读取权限，能否获得文件夹内文件列表，读取文件夹内信息；写入权限，能否操作文件夹内文件（增删）；搜索权限，能否看到并进入该文件夹进行访问。
+
+​	在对文件整体进行操作的过程中，还有一些命令需要关注
+
+```shell
+rm -i -r -f [-path]	//-i逐一确认，-r逐一删除，-f强制删除
+mv [-path] [-destination]	//可以移动文件到指定位置，或完成改名
+cp [-path] [-destination]	//复制文件到指定位置（-r用于目录复制）
+mkdir -p [-path]	//创建指定路径的目录（-p判断是否存在，若不存在即创建）
+```
+
+​	其中具体的文件可以用通配符`*`代替用以批量执行命令。其他不常用的命令行可以通过`man`命令获取具体使用方法和意义。
+
+​	在Shell中主要有输入流和输出流，而在终端界面中，键盘是输入，显示器是输出，但是可以通过`<`和`>`分别重定向
+
+
+
+#### · Git
 
 ​	一个开源的分布式版本控制软件，可以接入GitHub、Gitee等远程项目托管网站。可以从中建立仓库(repository)，并管理仓库中各个文件的版本，可以方便地存储和回退。需要下载专门的Git关键并完成部署（可以通过终端、IDE端和Git自带的GUI进行控制和管理）
 
@@ -343,11 +447,11 @@ git rebase [BranchName]	//将当前分支变基到[BranchName]分支上
 
 ​	使用`merge`可以很好保留项目的历史情况，说明提交记录和各分支原本的情况，但是分支图会比较复杂；使用`rebase`能够让项目更加线性和直观，但是会改变历史关系，应避免在共享分支时使用。
 
-##### · GitHub
+#### · GitHub
 
 
 
-##### · SSH
+#### · SSH
 
 ​	SSH是一种远程安全数据传输协议，需要现在Windows系统上安装OpenSSH客户端和服务器端。检验是否安装成功并且正确运行ssh
 
@@ -435,6 +539,7 @@ goto home
 
 
 
+---
 
 ### 深度学习
 
