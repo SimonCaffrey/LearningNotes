@@ -897,6 +897,41 @@ $$
 $$
 where $\beta_{n,u}$ and $\bar{\beta}_{n,m,k}$ are the according large-scale fading coefficients, and $\mathbf{h}_{n,u}\sim\mathcal{CN}\pqty{\mathbf{0,I}_L}$ and $\mathbf{h}_{n,m,k}\sim\mathcal{CN}\pqty{\mathbf{0,I}_L}$ are the according small-scale fading vectors.
 
+​	This system is assumed to work under the reciprocity-based TDD protocol, where the channels remains unchanged during a coherence interval $T$. CSI is needed by APs, and the pilot to unicast is orthogonal and to all users in each multicast group is shared, due to limited coherence interval and sharing mechanism of multicast, thus, $U+M$ orthogonal pilots are needed. Let $\phi_u\in\mathbb{C}^{\tau\times1},\norm{\phi_u}^2=1$ be the pilot of $u$-th unicast user and $\varphi_m\in\mathbb{C}^{\tau\times1},\norm{\varphi_m}^2=1$ be the pilot of multicast users in $m$-th multicast group, while $U+M\leq\tau\leq T$. Therefore, $\phi_u^\mathrm{H}\phi_{u'}=0,\phi_u^\mathrm{H}\varphi_m=0,\varphi_m^\mathrm{H}\varphi_{m'}=0,\forall u\neq u',m\neq m'$. The received signal at $n$-th AP during uplink training can be
+$$
+\mathbf{Y}_{n,p}=\sqrt{\tau p_\text{ul}}\sum_{u=1}^U\mathbf{c}_{n,u}\phi_u^\mathrm{H}+\sqrt{\tau p_\text{ul}}\sum_{m=1}^M\sum_{k=1}^{K_m}\mathbf{t}_{n,m,k}\varphi_m^\mathrm{H}+\Psi_{n,p}
+$$
+where $\Psi_{n,p}\in\mathbb{C}^{L\times\tau}$ is the addictive white Gaussian noise and $p_\text{ul}$ is the uplink transmit power. To estimate $\mathbf{c}_{n,u}$, we can correspondingly project the received signal $\mathbf{Y}_{n,p}$ onto the pilot of $u$-th unicast user
+$$
+\check{\mathbf{y}}_{n,p,u}=\mathbf{Y}_{n,p}\phi_u=\sqrt{\tau p_\text{ul}}\mathbf{c}_{n,u}+\psi'_{n,p}
+$$
+where $\psi'_{n,p}=\Psi_{n,p}\phi_u\sim\mathcal{CN}\pqty{\mathbf{0,I}_L}$ can be easily gained. Each AP can estimate the unicast user channel and further minimize the backhaul signaling. The MMSE estimate of $\mathbf{c}_{n,u}\in\mathbb{C}^{L\times1}$ is 
+$$
+\begin{align}
+\hat{\mathbf{c}}_{n,u}&=\frac{\mathbb{E}\qty{\mathbf{c}_{n,u}\check{\mathbf{y}}_{n,p,u}^\mathrm{H}}}{\mathbb{E}\qty{\check{\mathbf{y}}_{n,p,u}\check{\mathbf{y}}_{n,p,u}^\mathrm{H}}}\cdot\check{\mathbf{y}}_{n,p,u}=\frac{\mathbb{E}\qty{\sqrt{\tau p_\text{ul}}\mathbf{c}_{n,u}\mathbf{c}_{n,u}^\mathrm{H}}}{\mathbb{E}\qty{\tau p_\text{ul}\mathbf{c}_{n,u}\mathbf{c}_{n,u}^\mathrm{H}+\psi_{n,p}'\psi_{n,p}'^\mathrm{H}}}\cdot\check{\mathbf{y}}_{n,p,u}\\
+&=\frac{\sqrt{\tau p_\text{ul}}\beta_{n,u}\mathbb{E}\qty{\mathbf{I}_L}}{\pqty{\tau p_\text{ul}\beta_{n,u}+1}\mathbb{E}\qty{\mathbf{I}_L}}\cdot\check{\mathbf{y}}_{n,p,u}=\frac{\sqrt{\tau p_\text{ul}}\beta_{n,u}}{\tau p_\text{ul}\beta_{n,u}+1}\cdot\check{\mathbf{y}}_{n,p,u}
+\end{align}
+$$
+
+due to $\mathbf{c}_{n,u}\psi_{n,p}'^\mathrm{H}=\psi_{n,p}'\mathbf{c}_{n,u}^\mathrm{H}=0$. Then, the variance of the estimated channel $\hat{\mathbf{c}}_{n,u}$ will be
+$$
+\gamma_{n,u}=\mathbb{E}\qty{\vqty{\bqty{\hat{\mathbf{c}}_{n,u}}_l}^2}=\frac{\tau p_\text{ul}\beta_{n,u}^2}{\tau p_\text{ul}\beta_{n,u}+1},
+$$
+and the estimation error of $\mathbf{c}_{n,u}$ is $\tilde{\mathbf{c}}_{n,u}=\mathbf{c}_{n,u}-\mathbf{\hat{c}}_{n,u}\sim\mathcal{CN}\pqty{\mathbf{0},\pqty{\beta_{n,u}-\gamma_{n,u}}\mathbf{I}_L}$.
+
+Similarly, the MMSE estimate of the $k$-th multicast user $\mathbf{t}_{n,m,k}$ is given by
+$$
+\hat{\mathbf{t}}_{n,m,k}=\frac{\sqrt{\tau p_\text{ul}}\bar{\beta}_{n,m,k}}{\tau p_\text{ul}\sum_{t=1}^{K_m}\bar{\beta}_{n,m,t}+1}\check{\mathbf{y}}_{n,p,m}
+$$
+where $\check{\mathbf{y}}_{n,p,m}$ is the received signal projection onto the pilot of $m$-th multicast group like $\check{\mathbf{y}}_{n,p,u}$, and $\check{\mathbf{y}}_{n,p,m}=\mathbf{Y}_{n,p}\varphi_m=\sqrt{\tau p_\text{ul}}\sum_{k=1}^{K_m}\mathbf{t}_{n,m,k}+\psi''_{n,p}$, while $\psi''_{n,p}=\Psi_{n,p}\varphi_m\sim\mathcal{CN}\pqty{\mathbf{0,I}_L}$. Thus, the estimation error of $\mathbf{t}_{n,m,k}$ will similarly be $\tilde{\mathbf{t}}_{n,m,k}=\mathbf{t}_{n,m,k}-\hat{\mathbf{t}}_{n,m,k}\sim\mathcal{CN}\pqty{\mathbf{0},\pqty{\bar{\beta}_{n,m,k}-\bar{\gamma}_{n,m,k}}\mathbf{I}_L}$, where
+$$
+\bar{\gamma}_{n,m,k}=\mathbb{E}\qty{\vqty{\bqty{\hat{\mathbf{t}}_{n,m,k}}_l}^2}=\frac{\tau p_\text{ul}\bar{\beta}^2_{n,m,k}}{\tau p_\text{ul}\sum_{t=1}^{K_m}\bar{\beta}_{n,m,t}+1}
+$$
+
+
+
+
+
 
 
 

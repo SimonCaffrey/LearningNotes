@@ -165,7 +165,7 @@ $$
 $$
 C=\log\pqty{1+\frac{Pa^2n_tn_r}{N_0}}\ \ \text{bits/s/Hz}
 $$
-​	需要注意的是，即使有多副收发天线组成天线阵列，该通信系统的DoF仍旧是一维的（由于信号最终投影在一维空间）。$n_tn_r$是功率增益因子，单发射天线时，接收机采用接收波束成形即可获得增益；单接收天线时，采用发射波束成形即可获得增益；多发射天线和多接收天线下，系统可同时受益于发射波束成形和接收波束成形。最终，视距信道下，MIMO系统仅提供了功率增益，未提供DoF增益。
+​	需要注意的是，即使有多副收发天线组成天线阵列，该通信系统的DoF仍旧是一维的（由于信号最终投影在一维空间）。$n_tn_r$是功率增益因子，单发射天线时，接收机采用接收波束成形即可获得增益；单接收天线时，采用发射波束成形即可获得增益；多发射天线和多接收天线下，系统可同时受益于发射波束成形和接收波束成形。最终，视距信道下，MIMO系统仅提供了功率增益，未提供DoF增益。（因为$\mathbf{H}$的每一列与其他列都是线性相关，每一行与其他行也是线性相关，因此也就只有一个特征值）
 
 **地理上离散的天线阵列**：之前较为密集的MIMO阵列都无法取得DoFs增益，这里研究地理上离散的天线阵列以获得DoFs的增益。假设两发射天线，其间距与其与接收天线阵列的距离可比拟，且他们到接收天线阵列都只有一条直射（LoS）信道，两条直射信道分别有衰减因子和入射角为$a_1$，$\phi_{r1}$和$a_2$，$\phi_{r2}$。进一步假设发射天线的信号时延扩展远小于$1/W$，则可以继续使用上文的建模，得到发射天线$k$发射信号到接收天线阵列的空间特征图为
 $$
@@ -203,6 +203,8 @@ $$
 \lambda_1^2=a^2n_r\pqty{1+\abs{\cos\theta}},\lambda_2^2=a^2n_r\pqty{1+\abs{\cos\theta}}
 $$
 条件数则可相应地表示为$\frac{\lambda_1}{\lambda_2}=\sqrt{\frac{1+\abs{\cos\theta}}{1-\abs{\cos\theta}}}$，从中可以看出，当$\abs{\cos\theta}\approx1$时，信道矩阵$\mathbf{H}$为病态矩阵，否则为良矩阵。进一步分析，当$\cos\theta=1$时，$\abs{\frac{\sin\pqty{\pi L_r\Omega_r}}{\sin\pqty{\pi L_r\Omega_r/n_r}}}$需要为$n_r$，根据取极限的方式，该式只有在$\pi L_r\Omega_r$趋近于0，或者直接的$\Omega_r=\Omega_{r2}-\Omega_{r1}$趋近于0时满足该式为$n_r$，考虑到实际中$\Omega_{r1}$和$\Omega_{r2}$的取值范围有限，所以可以基本说明，一定范围内，$\Omega_{r1}$和$\Omega_{r2}$差异越大时，信道矩阵$\mathbf{H}$状态越好。
+
+​	函数$f_r\pqty{\cdot}$的周期受$\mathbf{e}_r\pqty{\cdot}$的影响。由于宽度$2/L_r$的主瓣出现在$1/\Delta_r$整数倍位置，而其他旁瓣峰值较低，这意味着当任意$m$能够满足$\vqty{\Omega_r-\frac{m}{\Delta_r}}\ll\frac{1}{L_r}$时，特征图接近于一条直线且信道矩阵为病态矩阵。进一步，因为$\Omega_r\in\bqty{-2,2}$（由于$\Omega_r=\Omega_{r1}-\Omega_{r2}$，且$\Omega_{r1},\Omega_{r2}\in\bqty{-1,1}$）所以当天线间隔$\Delta_r\leq1/2$时，条件就可以简化为$\vqty{\Omega_r}\ll\frac{1}{L_r}$。
 
 
 
@@ -275,6 +277,8 @@ $$
 
 **Shell**
 
+​	这里的命令行和操作大多都在Linux上实现，虽然大多数在Windows和MacOS上也有类似操作，但是可能存在部分不兼容问题，建议可以学习和记录以便之后能够在Linux更快上手操作。
+
 ​	在Shell中使用echo可以打印出参数中的内容，例如
 
 ```shell
@@ -289,14 +293,14 @@ echo Hello
 ```shell
 pwd
 >>> C:\Users\Simon\documents\CppProjects\task0
-------------------------------------
+-----------------------------------
 ls
 >>>	helloworld.cpp
 	helloworld.exe
 
 ls -l [path]
 drwxr-xr-x 1 missing  users  4096 Jun 15  2019 missing
-------------------------------------
+-----------------------------------
 cd ..
 C:\Users\Simon\documents\CppProjects
 ```
@@ -314,7 +318,195 @@ mkdir -p [-path]	//创建指定路径的目录（-p判断是否存在，若不�
 
 ​	其中具体的文件可以用通配符`*`代替用以批量执行命令。其他不常用的命令行可以通过`man`命令获取具体使用方法和意义。
 
-​	在Shell中主要有输入流和输出流，而在终端界面中，键盘是输入，显示器是输出，但是可以通过`<`和`>`分别重定向
+​	在Shell中主要有输入流和输出流，而在终端界面中，键盘是输入，显示器是输出，但是可以通过`<`和`>`分别重定向输入流和输出流，而`>>`则可以向文件追加内容。
+
+```shell
+echo hello > hello.txt	//重定向输出流到hello.txt文件中
+cat < hello.txt	//将输入流重定向为由hello.txt输入
+cat < hello.txt > hello1.txt	//先重定向输入流为hello再重定向输出为hello1
+echo world >> hello.txt	//追加内容到hello.txt文件中
+```
+
+​	pipes能够使得用户更充分地利用文件的重定向，`|`通过重定向输入输出流来串联命令行完成顺序执行，`|`可以将其左边的输出作为右边的输入并执行程序，使得终端显示窗口更加简洁，例如
+
+```shell
+ls -l | tail -n1 > ls.txt	//通过管道将ls输出结果最后一行重定向入ls.txt
+```
+
+​	根用户（管理员用户）对于主机上任何文件都拥有所有权限，正常情况下，类Unix系统中不会以根用户身份直接登录系统，避免直接损坏计算机系统，不过可以在希望调用相关功能的时候使用`sudo`命令。但由于shell等工具的特性，使用`sudo`程序时只能将后续参数对应的程序以`root`身份执行，当使用pipes连接或输入输出流重定向时，后续操作则无法继续以`root`身份执行，例如
+
+```shell
+sudo echo 500 > brightness
+```
+
+其本质就是执行`sudo`程序，以`root`身份运行`echo`程序输出流为500，但以普通用户身份将输出流重定向到brightness文件中，因此无法完成。为了以`root`身份执行程序，通常需要使用以下语句切换到`root`身份，此后所有的程序都以`root`执行
+
+```shell
+sudo su	//切换到root用户，使用exit命令退出root用户
+```
+
+或者可以用以下语句代替
+
+```shell
+echo 1600 | sudo tee brightness
+```
+
+这里的`tee`是将输入流输入到后续参数对应的文件中并再次输出。因此这段命令行的运行逻辑是，先通过`echo`命令设置输出流为1600，再通过pipes连接将其转变为下一条语句的输入流，然后执行`sudo`命令以`root`用户执行`tee`程序，`tee`程序先接收输入流中的1600，再向brightness文件输入并完成输出。
+
+​	Shell中可以为变量赋值，为变量赋值的语法是`foo=bar`，访问变量时的语法为`$foo`（需要注意的是，在进行赋值时不应出现空格，否则会出现错误，空格在shell中用以分割参数）。而在需要赋值字符串时，可以用`'hello'`或`"hello"`进行定义，当使用`'hello $foo'`时，其中的变量不会被转义，而`"hello $foo"`则会被转义到对应变量的值
+
+```shell
+foo=bar
+echo $foo/echo "$foo"
+>>>bar
+-----------------------------------
+echo '$foo'
+>>> $foo
+```
+
+​	Shell同样可以设计和运行函数，并包含`if`，`case`，`while`，`for`这些控制关键字用以辅助程序设计和执行，接下来将以一个创建文件夹并进入该文件夹的函数为例进行详述
+
+```shell
+mcd(){
+	mkdir -p "$1"	//创建一个以参数"$1"为名的文件夹
+	cd "$1"		//进入文件夹"$1"
+}
+```
+
+需要注意的是，这里的`$1`是程序后通过空格分隔后接收到的第一个参数，该函数/程序执行的逻辑是接收参数`$1`，然后以该参数为名调用`mkdir`函数创建文件夹，再通过`cd`函数进入该文件夹。以下是一些变量
+
+```shell
+$0		//脚本名称
+$1-$9	//一共9个变量对应程序后通过空格分割后可以向函数传入的9个参数
+$@		//所有参数
+$#		//参数的个数
+$?		//前一个命令/程序执行后的返回值
+$_		//上一条命令的最后一个参数
+$$		//当前程序的进程识别码（？）
+!!		//包含程序指令和参数的完整的上一条命令，常用于sudo下重新执行前一条程序
+```
+
+`$?`所代表的函数返回值可以与`&&`（与操作）和`||`（或操作）搭配，用来判断是否执行后续指令，有如下案例
+
+```shell
+false || echo "hello"
+>>>hello
+-----------------------------------
+true || echo "hello"
+>>>
+----------------------------------------------------------------------
+false && echo "hello"
+>>>
+-----------------------------------
+true && echo "hello"
+>>>hello
+```
+
+使用`||`时，前一个程序未成功执行（返回`false`）才执行后一个，使用`&&`只有前一个程序成功执行（返回`true`时）才能执行后一个，否则都不执行后一个程序。若程序无直接关联，不用重定向输入输出流且前一个程序的返回值不影响后续程序，则可以直接用`;`连接。
+
+​	当希望使用程序的输出作为变量时可以通过以下方式完成赋值或者内嵌
+
+```shell
+foo=$(pwd)	//将当前的绝对位置赋值给foo变量
+echo "We are in $(pwd)"	//这里可以利用这样的方式完成变量替换，但是需要用""
+```
+
+另一个类似的功能叫做进程替换，这里举两个例子
+
+```shell
+diff <(ls foo) <(ls bar)	//通过ls打开foo/bar并存储在临时文件，再比较
+cat <(ls) <(ls ..)	//通过两个ls获取文件夹列表，然后通过cat输出两个列表内容
+```
+
+与之前的不同，这里的`<(ls foo)`是将`ls`的输出作为内容存入一个临时文件，然后将`<(ls foo)`替换为临时文件的名称，因此程序将直接从临时文件中读取，将内容的传递从STDIN变为了文件。
+
+​	接下来展示一个教学讲义中的脚本，通过理解该脚本可以尝试写出自己的实用脚本
+
+```shell
+#!/bin/bash	//shebang
+echo "Starting program at $(date)"
+echo "Running program $0 with $# arguments with pid $$"
+
+for file in "$@"; do
+    grep foobar "$file" > /dev/null 2> /dev/null	//输出流和错误流被重定向
+    if [[ $? -ne 0 ]]; then	//-ne是not equal
+        echo "File $file does not have any foobar, adding one"
+        echo "# foobar" >> "$file"
+    fi
+done
+```
+
+​	当文件过多无法挨个输入时可以使用通配符完成这一工作。`*`匹配不定长字符串，`?`匹配单个字符，`[]`匹配括号中出现的任意字符（`[]`中可以用“1-9”或“1/2/3”表示），`!`表示取反，`{}`可表示公共子串，例如`image.{png,jpg,jpeg}`。
+
+​	脚本不只是可以用shell编写，还可以用其他语言，但是为了让计算机能知道采用什么编译器执行，需要一行shebang，就像上面脚本中的`#!/bin/bash`指定了编译器的位置，可以采用同样的方法指定其他语言编译器的地址。（特别地，如果未知编译器地址，可以用`#!/usr/bin/env python`代替）。
+
+​	这里还需要区分函数和脚本的不同，函数只能使用shell语言，而脚本可以使用任意语言，只需要在shebang行完成声明即可；函数在定义时加载，加载完成后，后续使用时不再重复加载，而脚本在每次使用时重新加载；函数在shell中执行，可以使用shell中规定的变量，而脚本则不行。
+
+​	对于常用的一些Shell命令和工具，之前介绍过可以使用`man`命令或命令后加`--help`查询，但是为了进一步获取更加实用的操作指南，我们还可以使用[TLDR](https://tldr.sh/)进行查询并学习实践案例。接下来，介绍一些常用的命令，其他命令和可以在日后使用中学习。
+
+​	`find`命令是查找文件的重要命令，可以搜索当前目录下的所有文件，并根据需求对查找到的文件进行操作
+
+```shell
+find . -name [filename] -type [filetype]	//查找[filetype]类型的[filename]
+find . -path [filepath] -type f	//查找该目录下的[filepath]文件（常结合通配符）
+find . -mtime -1	//找到修改日期为一天前的所有文件
+find . -size +[MinSize] -size -[MaxSize] -name [filename]	//范围内的文件
+----------------------------------------------------------------------
+find . -name [filename] -exec rm {} \;	//找到并删除[filename]
+find . -name [filename].x -exec magick {} {}.y \;	//查找并将替换后缀名x为y
+```
+
+通过上述语句就可以根据文件的特征实现对指定文件的查找（指定文件名称、类型、大小、修改时间或指定文件夹下所有文件），例如可以参考上边第二条语句`find . -path '*.py' -type f`找到文件夹下所有`.py`文件。在参数匹配中还可以将`-name`改为`-iname`以不区分大小写。
+
+​	`grep`是对于文件内容进行匹配的重要命令，可以查找包含/不包含某一关键字内容的文件，并输出上下文
+
+```shell
+grep -C 5 "main" [filename]	//查找文件中是否包含"main"字符并输出前后文5行
+grep -R "main"	//在当前目录下递归搜索所有包含"main"的文件并输出
+grep -v "main"	//输出所有内容中不包含"main"的文件
+```
+
+​	历史命令对于Shell使用非常重要，通过上键下键可以查询上一条或下一条命令，而直接使用`history`可以直接访问之前的所有历史命令。利用管道的特性还可以结合`grep`语句实现命令的搜索，例如`history | grep "find"`。还可以使用`Ctrl+R`通过关键字搜索历史命令记录。
+
+#### · Linux
+
+​	现行的大部分Linux系统都有方便的图形化界面，但是在进行远程操作（ssh）时最方便的方法是使用命令行直接进行控制和操作，命令行的大部分常用命令在[Missing Class](#· Missing Class)中有所介绍，这里根据使用中遇到的一些常用指令进行补充。（以Ubantu 24.04为例）
+
+​	更新系统和系统必要依赖
+
+```shell
+sudo apt update sudo apt upgrade -y	//更新系统
+sudo apt install -y build-essential linux-headers-$(uname -r)	//更新依赖
+```
+
+​	需要查看设备状态信息的时候常用语句
+
+```shell
+lscpu	//显示CPU的型号、核心数量、线程数、缓存等信息
+cat /proc/cpuinfo	//同样是展示CPU详细信息
+----------------------------------------------------------------------
+lspci -nn | grep -i vga	//列出显示设备（包含GPU型号）
+nvidia -smi	//安装完NVIDIA驱动后可以显示GPU的型号、显存使用状态等信息
+radeontop	//显示AMD的显卡情况
+```
+
+​	安装CUDA Toolkit的流程
+
+```shell
+wget https://developer.download.nvidia.com/compute/cuda/13.0.1/local_installers/cuda_13.0.1_580.82.07_linux.run
+sudo sh cuda_13.0.1_580.82.07_linux.run
+```
+
+（这两个命令行直接在[CUDA官网](https://developer.nvidia.com/cuda-downloads)根据自己的系统和配置复制即可）
+
+执行上述命令后根据提示选择`continue`输入`accept`然后勾选相应驱动，最后使用`sudo vim ~/.bashrc`添加环境变量，输入
+
+```shell
+export PATH=/usr/local/cuda-13.0.1/bin${PATH:+:${PATH}}
+export LD_LIBRARY_PATH=/usr/local/cuda-13.0.1/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+```
+
+保存后使用`nvcc -V`查询是否安装成功即可。
 
 
 
@@ -324,7 +516,7 @@ mkdir -p [-path]	//创建指定路径的目录（-p判断是否存在，若不�
 
 **初始化配置**
 
-```
+```shell
 git config --global user.name/email Name/@gmail.com	//配置用户名/邮箱
 git config --global --list	//查看配置信息
 ```
@@ -333,20 +525,20 @@ git config --global --list	//查看配置信息
 
 **Repo创建**
 
-```
+```shell
 //本地repo创建
 git init	//将当前文件夹作为repo
 git init [foldername]	//在当前目录创建一个文件夹foldername，并作为repo
 
 //Clone远程repo
-git clone [website]/[SSHcode]	//下载对应项目成为子文件夹，并作为一个repo
+git clone [website]/[SSHcode]	//下载对应项目为子文件夹，并作为一个repo
 ```
 
 ​	运行上述代码的同时还会在repo所在的文件夹中生成一个隐藏的`.git`文件夹，文件夹中为repo的必要软件，不能随意删除（删除`.git`文件夹后，该repo随即退化为普通文件夹）。
 
 **添加和提交**
 
-```
+```shell
 git status	//可以获取该仓库的状态（哪些仓库未被Git管理，哪些在暂存中）
 git log	//查看提交记录（包括作者和邮箱）
 git add [filename]	//将指定文件filename添加进入暂存中
@@ -359,7 +551,7 @@ git rm --cached [filename]	\\将暂存区中的指定文件filename从暂存区�
 
 **版本回退**
 
-```
+```shell
 git reset [harsh number]/HEAD^	//指定回退的版本号，HEAD^表示上一个版本
 git reset --hard/soft/mixed	//分别代表三种模式的版本回退
 ```
@@ -376,7 +568,7 @@ git reset --hard/soft/mixed	//分别代表三种模式的版本回退
 
 **查看差异**
 
-```
+```shell
 git diff	//默认状态下查看工作区和暂存区中对应文件的差异
 git diff HEAD	//加入关键字HEAD，比较工作区和repo中最后一个版本中文件差异
 git diff --cached	//比较暂存区和repo版本库中的差异
@@ -387,7 +579,7 @@ git diff HEAD^ HEAD [filename]	//查看指定文件filename在两版本之间的
 
 **删除文件**
 
-```
+```shell
 git rm [filename]	//同时删除工作区和暂存区的文件filename（但是还需提交）
 git rm --cached [filename]	//仅从暂存区中删除
 ```
@@ -396,18 +588,18 @@ git rm --cached [filename]	//仅从暂存区中删除
 
 `.gitignore`文件用于将那些不用上传到repo中的文件在上传中忽略（例如账户信息、密码、日志或可以由其中文件生成的文件）。在Linux中使用以下代码完成所需忽略的文件的添加
 
-```
-echo [filename] > .gitignore	//添加单个文件
-echo *.[suffix] > .gitignore	//利用通配符*添加一类文件
+```shell
+echo [filename] >> .gitignore	//添加单个文件
+echo *.[suffix] >> .gitignore	//利用通配符*添加一类文件
 ```
 
-`.gitignore`本质上是一个文本文档，可以向其写入所需忽略的文档名或利用通配符规则表述所需忽略的文档特征。*匹配不定长字符串，?匹配单个字符，[]匹配括号中出现的任意字符（[]中可以用“1-9”或“1/2/3”表示），!表示取反。
+`.gitignore`本质上是一个文本文档，可以向其写入所需忽略的文档名或利用通配符规则表述所需忽略的文档特征。`*`匹配不定长字符串，`?`匹配单个字符，`[]`匹配括号中出现的任意字符（`[]`中可以用“1-9”或“1/2/3”表示），`!`表示取反。
 
 **关联本地和远程仓库**
 
-可以将本地已经有的和远程已经有的仓库关联起来，不必再每次都使用`git clone`。
+​	可以将本地已经有的和远程已经有的仓库关联起来，不必再每次都使用`git clone`。
 
-```
+```shell
 git remote add [ProjName] [Github_SSH_address]	//将该目录与远程进行关联
 git remote -v	//查看远程仓库的别名和地址
 git branch -M main/[BranchName]	//指定分支名称
@@ -425,7 +617,7 @@ git pull [ProjName] [BranchName1]:[BranchName2]	//拉取
 
 ​	分支管理便于大团队项目协作的场景，可以解决多用户冲突的问题，每个分支都可以形成独立的项目。
 
-```
+```shell
 git branch	//查看当前项目的分支（*指示当前所在的分支）
 git branch [BranchName]	//创建名为[BranchName]的分支
 git switch/checkout [BranchName]	//切换分支（优先switch)
@@ -439,7 +631,7 @@ git merge --abort	//遇到合并冲突后放弃合并
 
 ​	需要注意的是，完成分支合并之后，原来的分支依旧存在，只是在分支中创建和修改的文件或内容被批量提交到了主线中。
 
-```
+```shell
 git rebase [BranchName]	//将当前分支变基到[BranchName]分支上
 ```
 
@@ -455,7 +647,7 @@ git rebase [BranchName]	//将当前分支变基到[BranchName]分支上
 
 ​	SSH是一种远程安全数据传输协议，需要现在Windows系统上安装OpenSSH客户端和服务器端。检验是否安装成功并且正确运行ssh
 
-```
+```shell
 Get-Service -Name *ssh*	//抓取是否正在运行SSH（确保自动启动）
 netstat -an | findstr : 22	//确认是否正确监听22端口
 ```
@@ -464,7 +656,7 @@ netstat -an | findstr : 22	//确认是否正确监听22端口
 
 ​	内网连接适用于处于同一局域网或者目标对象为公网IP的连接设备
 
-```
+```shell
 ssh "UserName"@IP_address	//连接该IP地址中的用户"UserName"
 ```
 
@@ -472,7 +664,7 @@ ssh "UserName"@IP_address	//连接该IP地址中的用户"UserName"
 
 ​	为了实现便捷的免密访问，可以利用ssh的密钥机制。
 
-```
+```shell
 ssh-keygen -t rsa -b 4096	//生成-t类型-b长度的一对密钥
 ssh-copy-id -i [file_address] "UserName"@IP_address	//-i指定公钥文件地址
 ```
@@ -483,7 +675,7 @@ ssh-copy-id -i [file_address] "UserName"@IP_address	//-i指定公钥文件地址
 
 ​	适用于进行连接的两台主机不在同一局域网下，且双方均无公网IP，但是依旧有远程进行文件管理和操作的需求。这里采用frp进行内网穿透。
 
-```
+```shell
 sudo vim etc/hosts	//MacOS超级管理员模式下的Linux（打开后加入桥服务器IP）
 echo [ip_address] >> C:\Windows\System32\drivers\etc\hosts	//Windows
 ```
@@ -494,14 +686,14 @@ echo [ip_address] >> C:\Windows\System32\drivers\etc\hosts	//Windows
 
 ​	接下来需要分别启动桥服务器和目标主机上的frp程序。在分别执行以下代码之前需要将命令行转至frps或frpc文件夹
 
-```
+```shell
 ./frps -c ./frps.ini	//启动桥服务器端的frps程序
 ./frpc -c ./frpc.ini	//启动目标主机端的frpc程序
 ```
 
 上述命令可能由于不同系统有细微区别，但是大致相同。配置完成后，在使用中，如果希望（经由桥服务器）连接目标主机进行操作，则需要执行以下代码
 
-```
+```shell
 ssh -p [in_port] "UserName"@IP_address	//连接目标主机
 ```
 
@@ -522,7 +714,7 @@ systemctl status frps
 
 如果目标主机为Windows系统，则建立一个内容如下的`.bat`文件
 
-```
+```bat
 @echo off
 
 if not defined TAG{
@@ -537,7 +729,57 @@ goto home
 
 并将上述`.bat`文件的快捷方式放置在`C:\Users\[Your_User_Name]\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup`中即完成Windows系统的目标主机的自启动。
 
+#### · Python
 
+​	Python项目通常被运行在一个虚拟环境中，通常情况下Python会在创建项目时创建`.venv`文件夹用以储存环境，或是可以提前在conda中配置好环境再在创建项目时直接使用该环境，本质是通过更改Python的`sys.path`变量，将虚拟环境的目录储存其中，便于寻找指定的包。
+
+​	在使用和分享项目时，为便于告知项目运行环境的情况和快速安装环境中所需的包，可以采用以下两条语句
+
+```shell
+pip freeze > requirement.txt	//用以读取环境情况并将其存入requirement中
+pip install -r requirement.txt	//从文件中读取并一键完成环境中包的部署
+```
+
+但上述方法的弊端也会非常明显，使用这样的方法无法识别直接依赖和间接依赖，同样也无法正确在卸载完包后清理其间接依赖，因此目前推荐采用`pyproject.toml`文件记录虚拟环境的情况。运行
+
+```shell
+pip install -e .
+```
+
+即可将文件变为标准的Python软件包，并且能完成`pyproject.toml`中的依赖包安装。
+
+**conda、forge、mamba、uv**
+
+​	Anaconda, miniconda都是Anaconda.org公司的产品，前者包含所有的包，后者只有一些简单的命令行功能（但是同样可以完成包的安装），这两个软件的安装通常都选择default默认channel完成包下载。
+
+​	目前Anaconda公司对通过default进行下载包的行为收费，为了规避付费则可以使用与miniconda功能完全相同的miniforge进行替代（miniforge相较于miniconda仅将默认channel替换为conda-forge，命令行语言也完全相同）。
+
+​	conda是使用Python语言完成的，为了加快包的下载速度并利用多线程的优势，后来者又开发了mamba，使用中只需将原有命令行中的conda替换为mamba即可。mamba通常已经包含在了miniforge安装包中，安装miniforge后即可直接使用mamba命令行进行包管理。
+
+​	由于当前miniconda仍旧是使用较多的虚拟环境管理软件，且其他主流虚拟环境管理软件，miniforge和mamba使用的语言都与其类似，这里以miniconda为例简单介绍虚拟环境的创建管理。完成miniconda安装后会有一个`base`环境，而我们通常不建议直接使用`base`环境，这一环境是miniconda软件运行的环境，损坏后比较麻烦，所以需要创建一个新的环境
+
+```shell
+conda create -n [venv_name] //创建名为[venv_name]的虚拟环境
+```
+
+运行上述命令直接创建虚拟环境，并以现有最新的`python`版本作为编译器，也可以在上述命令行后加入`python=3.xx`设置指定版本的编译器。此外还可以使用`conda env list`查看虚拟环境列表，确认是否成功创建虚拟环境。完成创建后，此时运行的环境其实还是默认的`base`环境，所以需要激活到新创建的环境中
+
+```shell
+conda activate [venv_name]	//激活环境，此后所有命令都在[venv_name]环境下运行
+conda deactivae	//从当前环境中退出回到base环境
+```
+
+通过`activate`激活了建立好的环境后就可以进行虚拟环境的管理和操作了（例如包的安装卸载和查看）
+
+```shell
+conda install [package]	//通过这一命令可以安装对应的包
+```
+
+只要知道包的名字运行上述命令行即可完成安装，如果安装不成功可以尝试`pip install`命令（两者安装的包都在当前的虚拟环境中，只是使用`conda`命令将默认从anaconda公司提供的仓库中查询和安装，`pip`命令则默认从python开源网站上查询和安装），通常建议使用`conda`命令，因为其能够更好解决包之间的依赖问题。如果上述两个命令都不行，可以尝试上网搜索，因为有些包的安装名称[package]与使用时`import [package]`不一定相同，网上应该是有相关教程。
+
+​	还可以使用`conda list`查看当前环境中已经安装的包的情况（应该先切换到对应环境）。
+
+​	**最后，最重要的是，在创建环境后如果要安装包，一定要先切换到创建的新环境，不要将包直接安装在`base`环境中！**
 
 ---
 
