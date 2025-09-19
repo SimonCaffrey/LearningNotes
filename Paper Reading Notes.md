@@ -951,12 +951,26 @@ $$
 
 
 
+#### · New Mathematical Tools
+
+##### · Precoder Design for User-Centric Network Massive MIMO: A Symplectic Optimization Approach
+
+###### · Abstract
+
+​	In this paper, we design a precoder for a massive MIMO-base UCN by symlectic optimization, where the system serves users by partial BSs rather than all of them. The dimension of precoders is reduced compared to conventional massive MIMO, simplifying the precoders in practice. To avoid computational assumption on matrix inversion, symplectic optimization framework is adopted, which is based on dissipative Hamiltonian dynamical systems. However, to better fit this framework, we transform the received model into the real field and reformulate the WSR problem. The objective function is regarded as the potential energy of dynamical system. Due to the energy dissipation, the continuous dynamical system converges to a minimal potential energy state. By discretizing the continuous system while preserving the symplectic structure, we gain a iterative precoder design method. Finally, our proposed method is highly computationally efficient, while simulations prove the proposed symplectic optimization-based method outperform the WMMSE precoder in massive MIMO-based UCN.
+
+###### · Introduction
+
+​	Massive MIMO 
+
+###### · System Model
+
+​	Consider a massive MIMO-base UCN consisting of $K$ UTs and $B$ BSs, each BS equipped with a uniform planar array with $M_t=M_v\times M_h$ antennas, while each UT equipped with $M_r$ antennas. This communication system work in the TDD mode. 
 
 
 
 
-
-#### Semantic Communication
+#### · Semantic Communication
 
 ##### · *CSDN Blog Based on Paper -- Semantic Communications: overview, open issues, and Future Research Direction*
 
