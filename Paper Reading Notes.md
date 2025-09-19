@@ -441,7 +441,19 @@ $$
 
 ​	The numerical result is better than benchmark, especially the one adopting discrete antennas, while the near-field focusing using EM channel also better than traditional ones, especially for WPT.
 
+#### · PASS
 
+##### · Exploiting Pinching-Antenna Systems  in Multicast Communications
+
+###### · Abstract
+
+​	The PASS is a novel antenna structure for reconfiguring wireless by pinching beamforming, where the activated locations of PA are optimized. This paper investigate application of PASS in multicast to maximize the multicast rate. ***In the single-waveguide scenario*** with single PA and linearly user location, a closed-form optimal activated location is derived. Then, a closed-form expression for achievable multicast rate is obtained and proven to outperform the fixed antenna. For the general multiple-PA system with arbitrary user distributions, an element-wise AO-based algorithm is proposed to beamform. ***In the multiple-waveguide scenario***, an AO-based scheme is design to jointly optimize the transmit and pinching beamformer. The transmit beamformer is updated by MM framework and SOCP, while the pinching beamformer is optimized by element-wise sequential refinement. Numerical results demonstrate that PASS can achieve higher multicast rate, especially when larger users and spatial coverage, while more PAs can further improves the performance of system.
+
+###### · System Model
+
+​	In this section, we propose a PASS-enabled multicast system, the BS is equipped with $M$ waveguides, each equipped with $N$ PAs to serve $K$ users. The location of users $K\in\mathcal{K}$ is given by $\psi_k=\bqty{\hat{x}_k,\hat{y}_k,0}^\mathrm{T}$, and distributed in a square region of $D=D_x\times D_y\text{m}^2$ randomly. 
+
+​	Assume that all waveguides are with fixed height of $h$, and the PASS spans across region $D$ and $\mathcal{M}$, $\mathcal{N}_m$ denote the sets of waveguides and PAs on $m$-th waveguide, respectively. The waveguides are spaced along the $y$-axis with equal interval of $d_y=D_y/\pqty{M-1}\text{m}$
 
 #### ·Multicast
 
@@ -459,7 +471,7 @@ $$
 
 ​	Define the diagonal matrix $\pmb{E}=diag([e_1,...,e_M]^T)\in \mathbb{C}^{M\times M}$ as the reflection coefficient matrix, and each $e_i$ satisfy $|e_i|^2=1$.
 
-​	Due to the BS with N antenna, while RIS with M antenna, we can simply define the channel from BS to user $k$ as $\mathbf{h}_{d,k}\in\mathbb{C}^{N\times 1}$, from BS to RIS as $\mathbf{H}_{d,r}\in\mathbb{C}^{M\times N}$, (while the reflection coefficient matrix is $\mathbf{E}=diag([e_1,...e_M]^T)\in\mathbb{C}^{M\times M}$) from RIS to user $k$ as $\mathbf{h}_{r,k}\in\mathbb{C}^{M\times 1}$, respectively.
+​	Due to the BS with N antenna, while RIS with M antenna, we can simply define the channel from BS to user $k$ as $\mathbf{h}_{d,k}\in\mathbb{C}^{N\times 1}$, from BS to RIS as $\mathbf{H}_{d,r}\in\mathbb{C}^{M\times N}$, (while the reflection coefficient matrix is $\mathbf{E}=\text{diag}([e_1,...e_M]^T)\in\mathbb{C}^{M\times M}$) from RIS to user $k$ as $\mathbf{h}_{r,k}\in\mathbb{C}^{M\times 1}$, respectively.
 
 ​	Assumed BS knows CSI and send to RIS, the signal received by each user of  group $g$ is:
 $$
@@ -928,6 +940,14 @@ $$
 \bar{\gamma}_{n,m,k}=\mathbb{E}\qty{\vqty{\bqty{\hat{\mathbf{t}}_{n,m,k}}_l}^2}=\frac{\tau p_\text{ul}\bar{\beta}^2_{n,m,k}}{\tau p_\text{ul}\sum_{t=1}^{K_m}\bar{\beta}_{n,m,t}+1}
 $$
 
+Considering the co-pilot strategy in [32], we gain
+$$
+\hat{\mathbf{t}}_{n,m}=\sum_{k=1}^{K_m}\hat{\mathbf{t}}_{n,m,k}=\hat{\mathbf{t}}_{n,m,k}=\frac{\sqrt{\tau p_\text{ul}}\sum_{k=1}^{K_m}\bar{\beta}_{n,m,k}}{\tau p_\text{ul}\sum_{t=1}^{K_m}\bar{\beta}_{n,m,t}+1}\check{\mathbf{y}}_{n,p,m}
+$$
+and regard this as the channel estimate of the $m$-th multicast group, with mean square as
+$$
+\zeta_{n,m}=\mathbb{E}\qty{\vqty{\bqty{\hat{\mathbf{t}}_{n,m}}_l}^2}=\hat{\mathbf{t}}_{n,m,k}=\frac{\pqty{\sqrt{\tau p_\text{ul}}\sum_{k=1}^{K_m}\bar{\beta}_{n,m,k}}^2}{\tau p_\text{ul}\sum_{t=1}^{K_m}\bar{\beta}_{n,m,t}+1}
+$$
 
 
 

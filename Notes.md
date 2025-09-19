@@ -793,3 +793,35 @@ $$
 &\ \ \ \ \ \ \ \ \ \ -\frac{\sum_{g'\neq g}^G\mathbf{Q}_k:\pqty{\mathbf{X}_j-\mathbf{X}_j^\pqty{n}}}{\pqty{\sum_{g'\neq g}^G\tr\pqty{\mathbf{Q}_k\mathbf{X}^\pqty{n}_{g'}}+\sigma_k^2}\ln2}
 \end{align}
 $$
+
+
+
+
+
+
+MIMO structure
+
+$\mathbf{y}=\mathbf{H}^\mathrm{H}\mathbf{Cx+n}$, where $\mathbf{H}$ is channel response matrix we already known with $\mathbf{H}=\bqty{}^\mathrm{H}$, and $\mathbf{C}$ is the precoding matrix we try to optimize, and $\mathbf{y}$, $\mathbf{x}$ is the received and transmitted signal, respectively, while $\mathbf{n}$ is noise and modeled as an addictive Gaussian White Noise.
+
+Thus, we can have a SINR under broadcast circumstance
+$$
+\begin{align}
+\text{SINR}_k&=\frac{\vqty{\mathbf{h}_k^\mathrm{H}\mathbf{Cx}}^2}{\sigma_k^2}=\frac{\mathbf{h}_k^\mathrm{H}\mathbf{Cxx}^\mathrm{H}\mathbf{C}^\mathrm{H}\mathbf{h}_k}{\sigma_k^2}\\
+&=\frac{\mathbf{h}_k^\mathrm{H}\mathbf{CC}^\mathrm{H}\mathbf{h}_k}{\sigma_k^2}=\frac{\tr\pqty{\mathbf{h}_k\mathbf{h}_k^\mathrm{H}\mathbf{CC}^\mathrm{H}}}{\sigma_k^2}
+\end{align}
+$$
+here we define the $\mathbf{Q}_k\triangleq\mathbf{h}_k\mathbf{h}_k^\mathrm{H}$, and $\mathbf{X}\triangleq\mathbf{CC}^\mathrm{H}$ to simplify the optimization process, then, the communication rate of $k$-th user in the broadcast group will be
+$$
+R_k=\log_2\pqty{\frac{\tr\pqty{\mathbf{Q}_k\mathbf{X}}}{\sigma_k^2}}
+$$
+Further considering the broadcast mechanism, we have the broadcast rate$R=\min_{k\in\mathcal{K}}\qty{R_k}$
+
+the optimization problem is clear enough now
+$$
+\begin{align}
+\max_{\qty{\mathbf{X},R}}\ \ \ \ \ &R,\\
+\text{s.t.} \ \ \ \ &\mathbf{X}\succeq0,\rank\pqty{\mathbf{X}}=1,\\
+&R\leq\log_2\pqty{\frac{\tr\pqty{\mathbf{Q}_k\mathbf{X}}}{\sigma_k^2}},k\in\mathcal{K},\\
+&\tr\pqty{\mathbf{X}}\leq P_T.
+\end{align}
+$$
