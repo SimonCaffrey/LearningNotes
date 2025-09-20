@@ -965,7 +965,38 @@ $$
 
 ###### · System Model
 
-​	Consider a massive MIMO-base UCN consisting of $K$ UTs and $B$ BSs, each BS equipped with a uniform planar array with $M_t=M_v\times M_h$ antennas, while each UT equipped with $M_r$ antennas. This communication system work in the TDD mode. 
+​	Consider a massive MIMO-based UCN consisting of $K$ UTs and $B$ BSs, each BS equipped with a uniform planar array with $M_t=M_v\times M_h$ antennas, while each UT equipped with $M_r$ antennas. This communication system work in the TDD mode. Assume that BSs are synchronized and interconnected by backhual, thus, the BSs can jointly coherently transmit. Let $\mathcal{S}_B=\qty{1,2,\cdots,B}$ denotes the set of BSs, while $\mathcal{S}_U=\qty{1,2,\cdots,K}$ denotes that of UTs, and the set $\mathcal{B}_k=\qty{k_1,k_2,\cdots,k_{B_k}}$ is the subset of $\mathcal{S}_B$ to serve specific user $k$, the set $\mathcal{U}_l=\qty{1,2,\cdots,l_{U_l}}$ is also the subset of $\mathcal{S}_u$ and served by specific BS $l$. This user-centric rule enables each UT to receive signals from the BS with best channel quality instead of the traditional cell concept. Fig 1 illustrates the massive MIMO-based UCN system.
+
+​	Let $x_k$ denotes the symbol transmitted to the $k$-th UT with $\mathbb{E}\qty{\vqty{\mathbf{x}}^2}=\mathbf{I}_K$, while $\mathbf{x}=\bqty{x_1,x_2,\cdots,x_K}^\mathrm{T}$. The channel vector from the $l$-th BS to the $k$-th user is denoted as $\mathbf{h}_{l,k}\in\mathbb{C}^{M_t\times M_r}$, and $\mathbf{p}_{l,k}$ denoted as the precoder vector for the transmission from $l$-th BS to $k$-th UT, among $l\in\mathcal{B}_k$. Then the received signal at $k$-th UT will be
+$$
+y_k=\sum_{l\in\mathcal{B}_k}\mathbf{h}_{l,k}^\mathrm{H}\mathbf{p}_{l,k}x_k+\sum_{l\in\mathcal{B}_k}\sum_{t\in\mathcal{U}_l,t\neq k}\mathbf{h}_{l,k}^\mathrm{H}\mathbf{p}_{l,t}x_t+\sum_{m\notin\mathcal{B}_k}\sum_{t\in\mathcal{U}_m}\mathbf{h}_{m,k}^\mathrm{H}\mathbf{p}_{m,t}x_t+z_k
+$$
+where $z_k\sim\mathcal{CN}\pqty{0,\sigma_z^2}$ is the AWGN. Let $z_k'$ denote the interference-plus-noise of $k$-th UT defines as
+$$
+\begin{align}
+z_k'
+&=\sum_{l\in\mathcal{B}_k}\sum_{t\in\mathcal{U}_l,t\neq k}\mathbf{h}_{l,k}^\mathrm{H}\mathbf{p}_{l,t}x_t+\sum_{m\notin\mathcal{B}_k}\sum_{t\in\mathcal{U}_m}\mathbf{h}_{m,k}^\mathrm{H}\mathbf{p}_{m,t}x_t+z_k\\
+&=\sum_{t\neq k}\sum_{m\in\mathcal{B}_t}\mathbf{h}_{m,k}^\mathrm{H}\mathbf{p}_{m,t}x_t+z_k
+\end{align}
+$$
+(Here, the author transfers the view from BSs to UTs, considering all the UT and the served BSs set except $k$-th UT)
+
+whose covariance is given by
+$$
+r_k=\sum_{t\neq k}\pqty{\sum_{m\in\mathcal{B}_t}\mathbf{h}_{m,k}^\mathrm{H}\mathbf{p}_{m,t}}\pqty{\sum_{m\in\mathcal{B}_t}\mathbf{h}_{m,k}^\mathrm{H}\mathbf{p}_{m,t}}^\mathrm{H}+\sigma_z^2
+$$
+then, the rate of $k$-th UT is obtained as 
+$$
+\mathcal{R}_k=\log_2\pqty{1+r_k^{-1}\pqty{\sum_{l\in\mathcal{B}_k}\mathbf{p}_{l,k}^\mathrm{H}\mathbf{h}_{l,k}}\pqty{\sum_{l\in\mathcal{B}_k}\mathbf{h}_{l,k}^\mathrm{H}\mathbf{p}_{l,k}}}.
+$$
+​	For simplicity, let $\mathbf{p}_l=\bqty{\mathbf{p}_{l,1}^\mathrm{T},\mathbf{p}_{l,2}^\mathrm{T},\cdots,\mathbf{p}_{l,K}^\mathrm{T}}^\mathrm{T}$ and $\mathbf{p}=\bqty{\mathbf{p}_1^\mathrm{T},\mathbf{p}_2^\mathrm{T},\cdots,\mathbf{p}_L^\mathrm{T}}^\mathrm{T}$. Since each BS has its individual power constraint in massive MIMO-based UCN, we organize a WSR-maximization precoder design method
+$$
+\begin{align}
+\max_{\mathbf{p}}\ \ \ \ &\sum_{k\in\mathcal{S}_U}\omega_k\mathcal{R}_k,\\
+\text{s.t.}\ \ \ \ &\sum_
+\end{align}
+$$
+
 
 
 
