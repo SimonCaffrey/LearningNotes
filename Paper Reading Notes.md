@@ -957,7 +957,7 @@ $$
 
 ###### · Abstract
 
-​	In this paper, we design a precoder for a massive MIMO-base UCN by symlectic optimization, where the system serves users by partial BSs rather than all of them. The dimension of precoders is reduced compared to conventional massive MIMO, simplifying the precoders in practice. To avoid computational assumption on matrix inversion, symplectic optimization framework is adopted, which is based on dissipative Hamiltonian dynamical systems. However, to better fit this framework, we transform the received model into the real field and reformulate the WSR problem. The objective function is regarded as the potential energy of dynamical system. Due to the energy dissipation, the continuous dynamical system converges to a minimal potential energy state. By discretizing the continuous system while preserving the symplectic structure, we gain a iterative precoder design method. Finally, our proposed method is highly computationally efficient, while simulations prove the proposed symplectic optimization-based method outperform the WMMSE precoder in massive MIMO-based UCN.
+​	In this paper, we design a precoder for a massive MIMO-based UCN by symlectic optimization, where the system serves users by partial BSs rather than all of them. The dimension of precoders is reduced compared to conventional massive MIMO, simplifying the precoders in practice. To avoid computational assumption on matrix inversion, symplectic optimization framework is adopted, which is based on dissipative Hamiltonian dynamical systems. However, to better fit this framework, we transform the received model into the real field and reformulate the WSR problem. The objective function is regarded as the potential energy of dynamical system. Due to the energy dissipation, the continuous dynamical system converges to a minimal potential energy state. By discretizing the continuous system while preserving the symplectic structure, we gain a iterative precoder design method. Finally, our proposed method is highly computationally efficient, while simulations prove the proposed symplectic optimization-based method outperform the WMMSE precoder in massive MIMO-based UCN.
 
 ###### · Introduction
 
@@ -965,7 +965,7 @@ $$
 
 ###### · System Model
 
-​	Consider a massive MIMO-based UCN consisting of $K$ UTs and $B$ BSs, each BS equipped with a uniform planar array with $M_t=M_v\times M_h$ antennas, while each UT equipped with $M_r$ antennas. This communication system work in the TDD mode. Assume that BSs are synchronized and interconnected by backhual, thus, the BSs can jointly coherently transmit. Let $\mathcal{S}_B=\qty{1,2,\cdots,B}$ denotes the set of BSs, while $\mathcal{S}_U=\qty{1,2,\cdots,K}$ denotes that of UTs, and the set $\mathcal{B}_k=\qty{k_1,k_2,\cdots,k_{B_k}}$ is the subset of $\mathcal{S}_B$ to serve specific user $k$, the set $\mathcal{U}_l=\qty{1,2,\cdots,l_{U_l}}$ is also the subset of $\mathcal{S}_u$ and served by specific BS $l$. This user-centric rule enables each UT to receive signals from the BS with best channel quality instead of the traditional cell concept. Fig 1 illustrates the massive MIMO-based UCN system.
+​	Consider a massive MIMO-based UCN consisting of $K$ UTs and $B$ BSs, each BS equipped with a uniform planar array with $M_t=M_v\times M_h$ antennas, while each UT equipped with $M_r$ antennas. This communication system work in the TDD mode. Assume that BSs are synchronized and interconnected by backhual, thus, the BSs can jointly coherently transmit. Let $\mathcal{S}_B=\qty{1,2,\cdots,B}$ denotes the set of BSs, while $\mathcal{S}_U=\qty{1,2,\cdots,K}$ denotes that of UTs, and the set $\mathcal{B}_k=\qty{k_1,k_2,\cdots,k_{B_k}}$ is the subset of $\mathcal{S}_B$ to serve specific user $k$, the set $\mathcal{U}_l=\qty{1,2,\cdots,l_{U_l}}$ is also the subset of $\mathcal{S}_U$ and served by specific BS $l$. This user-centric rule enables each UT to receive signals from the BS with best channel quality instead of the traditional cell concept. Fig 1 illustrates the massive MIMO-based UCN system.
 
 ​	Let $x_k$ denotes the symbol transmitted to the $k$-th UT with $\mathbb{E}\qty{\vqty{\mathbf{x}}^2}=\mathbf{I}_K$, while $\mathbf{x}=\bqty{x_1,x_2,\cdots,x_K}^\mathrm{T}$. The channel vector from the $l$-th BS to the $k$-th user is denoted as $\mathbf{h}_{l,k}\in\mathbb{C}^{M_t\times M_r}$, and $\mathbf{p}_{l,k}$ denoted as the precoder vector for the transmission from $l$-th BS to $k$-th UT, among $l\in\mathcal{B}_k$. Then the received signal at $k$-th UT will be
 $$
@@ -993,10 +993,39 @@ $$
 $$
 \begin{align}
 \max_{\mathbf{p}}\ \ \ \ &\sum_{k\in\mathcal{S}_U}\omega_k\mathcal{R}_k,\\
-\text{s.t.}\ \ \ \ &\sum_
+\text{s.t.}\ \ \ \ &\sum_{k\in\mathcal{U}_l}\mathbf{p}_{l,k}^\mathrm{H}\mathbf{p}_{l,k}\leq\rho_l,\forall l\in\mathcal{L}
 \end{align}
 $$
+where $\omega_k$ is the weight of $k$-th user and $\rho_l$ is the power constraints of $l$-th BS.
 
+​	This WSR-maximization problem can be directly solved by the iterative WMMSE.
+
+​	For simplicity, we define $A_{k,t}=\sum_{m\in\mathcal{B}_t}\mathbf{h}_{m,k}^\mathrm{H}\mathbf{p}_{m,t}$, and the $r_k$ can be rewritten as
+$$
+\check{r}_k=\sum_{t\in\mathcal{S}_U,t\neq k}A_{k,t}A_{k,t}^*+\sigma_z^2,
+$$
+and the WMMSE precoder is derived as
+$$
+\mathbf{p}_{l,k}^\text{WMMSE}=\frac{\omega_k\mathbf{h}_{l,k}u_k^*\mathrm{W}_k-\sum_{j\in\mathcal{S}_U}\omega_j\mathbf{h}_{l,j}u_j^*\sum_{m\neq l}\mathbf{h}_{m,j}^\mathrm{H}\mathbf{p}_{m,k}}{\sum_{j\in\mathcal{S}_U}\omega_j\mathbf{h}_{l,j}u_j^*\mathrm{W}_ju_j\mathbf{h}_{l,j}^\mathrm{H}+\lambda_k\mathbf{I}_{M_t}}
+$$
+where $u_k=A_{k,t}^*/\check{r}_k$ is the receive coefficient for $k$-th UT, $\mathrm{W}_k=1+A_{k,k}^*A_{k,k}/r_k$ is the MMSE weight, and $\lambda_k$ denotes the Lagrange multiplier, computed by bisection method。
+
+​	As shown in WMMSE precoder equation, the WMMSE method involves the inversion of an $M_t\times M_t$ matrix, which resulted in high computational complexity, significantly limiting the practical application of massive MIMO-based UCN system. To avoid this, conventional gradient descent (GD) methods directly solve WSR problem. Here, we define $g\pqty{\hat{\mathbf{p}}}=-f\pqty{\hat{\mathbf{p}}}$. Under this method, the conventional update formula can be given by
+$$
+\mathbf{p}_{n+1}^\text{GD}=\mathbf{p}_n^\text{GD}-\alpha\grad g\pqty{\mathbf{p}_n^\text{GD}}
+$$
+where $\grad g\pqty{\mathbf{p}_n^\text{GD}}$ denotes the negative gradient of WSR-maximization objective function with variable $\mathbf{p}_n^\text{GD}$ and $\alpha$ is the step size. However, the convergence performance of this conventional GD method is unsatisfied, while a better method NAGD is widely used to enhance the performance. The NAGD introduce a momentum term, significantly speeding up the iterative process and improving the convergence, which has been used in satellite communication precoder design with user-centric rule. The NAGD is as follows
+$$
+\begin{align}
+&\mathbf{q}_n=\mathbf{p}_n^\text{NAGD}+\mu\pqty{\mathbf{p}_n^\text{NAGD}-\mathbf{p}_{n-1}^\text{NAGD}}\\
+&\mathbf{p}_{n+1}^\text{NAGD}=\mathbf{q}_n-\alpha\grad g\pqty{\mathbf{p}_n^\text{NAGD}}
+\end{align}
+$$
+where $\mu$ is hyperparameter, $\alpha$ is step size in NAGD, and $\mathbf{q}$ denotes the novel momentum.
+
+​	In the GD method, it's crucial to choose step size for guaranteeing convergence performance. Generally, line search methods are widely used to enhance convergence, while Armijo condition is a criterion to test whether the candidate step size is proper. However, the line search spends too much computational resources on each iteration of objective function to find a fit $\alpha$.
+
+​	Symplectic optimization is an advanced novel method proposed to solve such a mathematical optimization problem, which relates the optimization problems with a dissipative dynamical system, where the potential energy is the objective function and a kinetic energy term is also included. Owing to energy dissipation, the continuous dissipative dynamical system always converges to a minimal potential energy, which is also a minimal value of the optimization problem. By using discretization that keeps the symplectic structure, and symplectic optimization method that keeps the properties of original continuous dynamical system is obtained, which means this symplectic optimization-based algorithm will run faster than conventional GD and more likely to escape local optimal point thanks to kinetic energy, then this algorithm might outperform the WMMSE who may be trapped in a local optimal point. We adopt such a symplectic optimization-based to precoder design for our considered massive MIMO-based UCN system in the following research.
 
 
 
