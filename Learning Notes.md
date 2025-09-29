@@ -787,7 +787,7 @@ conda install [package]	//通过这一命令可以安装对应的包
 
 #### · 《李沐动手学深度学习》学习笔记
 
-##### · 基础知识
+##### · Python基础知识
 
 ​	python可以利用numpy或者torch进行矩阵操作，这里为配合后续pytorch的使用统一以torch作为数据操作的包
 
@@ -822,7 +822,26 @@ torch.cat((x, y), dim=1)	//将x,y两个张量按第1维进行合并
         [11, 12, 13, 14, 28, 29, 30, 31]])
 ```
 
-​	还可以调用函数进行操作，例如`x.sum()`就能得到`120`的结果。
+​	还可以调用函数对矩阵进行操作，以下展示一些常用的函数和注释。
+
+```python
+x.numl()	//统计x矩阵个数
+x.shape[0]	//第0维的个数
+x.sum()/x.sum(axis=2)	//对x矩阵（按第2维）求和
+x.sum(axis=2, keepdim=True)	//按第2维求和但是保留原矩阵的维数
+x.mean()/x.mean(axis=2)	//对x矩阵（按第2维）求均值
+----------------------------------------------------------------------
+x = torch.arange(4)
+y = torch.arange(4)
+A = torch.arange(12).reshape(3, 4)
+B = torch.arange(12).reshape(4, 3)
+torch.dot(x, y)	//x, y两个向量的点积
+torch.mv(A, x)	//矩阵A（3×4）与向量x（4×1）乘积得到一个向量（3×1）
+torch.mm(A, B)	//矩阵A（3×4）与矩阵B（4×3）乘积得到一个矩阵（3×3）
+----------------------------------------------------------------------
+torch.norm(x)	//向量x的2范数
+torch.norm(A)	//矩阵A的F范数
+```
 
 ​	**广播机制**：当进行按元素进行操作的运算且tensor间的形状不同时，代码会自动通过广播复制的方式将原来的tensor变成两个形状相同的tensor。具体来说，可以通过以下代码验证
 
@@ -832,12 +851,42 @@ b = torch.arange(3).reshape(1, 3)
 a + b =
 tensor([[0, 1],
         [1, 2],
-        [2, 3]])	//通过广播机制将a和b都变成一个(2, 3)的矩阵再按元素进行操作
+        [2, 3]])	//广播机制将a和b都变成一个(2, 3)的矩阵再按元素进行操作
 ```
 
+​	Python的内存机制不同于C语言，当在Python中运行代码`a=b`时，实际上是将`a`的指针指向了`b`的存储位置，也就是可以认为对于`b`变量，`a`成为了`b`的别名，对`a`和`b`的操作是相同的，任何对于`a`的改变都会直接作用到`a`指向的位置，即`b`的存储空间，为了避免对`a`的更改影响到`b`，Python中使用`a=b.clone()`为`b`创建一个一摸一样的矩阵但是放在新的内存空间，`a`则指向这个新的空间。
 
+##### · 数学基础
 
+​	对于标量的求导这里不再赘述，为了帮助理解神经网络中的矩阵运算，这里给出一张表展示包含向量/矩阵的求导公式。当给定的$\mathbf{x}$，$\mathbf{y}$为向量时，满足`shape(x)=n, shape(y)=m`
 
+1. $\mathbf{y}$为向量，$x$为标量，$\partial\mathbf{y}/\partial x$，遵循规则$\bqty{\frac{\partial y_1}{\partial x},\frac{\partial y_2}{\partial x},\cdots,\frac{\partial y_m}{\partial x}}$。
+
+2. $y$为标量，$\mathbf{x}$为向量，$\partial y/\partial\mathbf{x}$，遵循规则$\bqty{\frac{\partial y}{\partial x_1},\frac{\partial y}{\partial x_2},\cdots,\frac{\partial y}{\partial x_n}}$，并在表格中总结了一些常用类型
+
+|                   $y$                   |           $a$           |                   $au$                   | $\text{sum}\pqty{\mathbf{x}}$ |  $\norm{\mathbf{x}}^2$   |                            $u+v$                             |                             $uv$                             |                 $\langle\mathbf{u,v}\rangle$                 |
+| :-------------------------------------: | :---------------------: | :--------------------------------------: | :---------------------------: | :----------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| $\frac{\partial y}{\partial\mathbf{x}}$ | $\mathbf{0}^\mathrm{T}$ | $a\frac{\partial u}{\partial\mathbf{x}}$ |    $\mathbf{1}^\mathrm{T}$    | $2\mathbf{x}^\mathrm{T}$ | $\frac{\partial u}{\partial\mathbf{x}}+\frac{\partial v}{\partial\mathbf{x}}$ | $\frac{\partial u}{\partial\mathbf{x}}v+\frac{\partial v}{\partial\mathbf{x}}u$ | $\mathbf{u}^\mathrm{T}\frac{\partial\mathbf{v}}{\partial\mathbf{x}}+\mathbf{v}^\mathrm{T}\frac{\partial\mathbf{u}}{\partial\mathbf{x}}$ |
+
+（通过分析可以知道，上述一个标量和一个向量的导数可以视为经过广播机制之后对逐个元素的求导，只有最后一个$\langle\mathbf{u,v}\rangle$需要注意一下）
+
+3. $\mathbf{x}$, $\mathbf{y}$都为向量，则遵循以下运算规则，并在表格中总结了一些常用的类型
+
+$$
+\frac{\partial\mathbf{y}}{\partial\mathbf{x}}=
+\begin{bmatrix}
+\frac{\partial\mathbf{y}_1}{\partial\mathbf{x}_1},\frac{\partial\mathbf{y}_1}{\partial\mathbf{x}_2},\cdots,\frac{\partial\mathbf{y}_1}{\partial\mathbf{x}_n}\\
+\frac{\partial\mathbf{y}_2}{\partial\mathbf{x}_1},\frac{\partial\mathbf{y}_2}{\partial\mathbf{x}_2},\cdots,\frac{\partial\mathbf{y}_2}{\partial\mathbf{x}_n}\\
+\vdots\\
+\frac{\partial\mathbf{y}_m}{\partial\mathbf{x}_1},\frac{\partial\mathbf{y}_m}{\partial\mathbf{x}_2},\cdots,\frac{\partial\mathbf{y}_m}{\partial\mathbf{x}_n}
+\end{bmatrix}
+$$
+
+| $\mathbf{y}$                                    | $\mathbf{a}$ | $\mathbf{x}$ | $\mathbf{Ax}$ | $\mathbf{x}^\mathrm{T}\mathbf{A}$ | $a\mathbf{u}$                                    | $\mathbf{Au}$                                             | $\mathbf{u+v}$                                               |
+| ----------------------------------------------- | ------------ | ------------ | ------------- | --------------------------------- | ------------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------ |
+| $\frac{\partial\mathbf{y}}{\partial\mathbf{x}}$ | $\mathbf{0}$ | $\mathbf{I}$ | $\mathbf{A}$  | $\mathbf{A}^\mathrm{T}$           | $a\frac{\partial\mathbf{u}}{\partial\mathbf{x}}$ | $\mathbf{A}\frac{\partial\mathbf{u}}{\partial\mathbf{x}}$ | $\frac{\partial\mathbf{u}}{\partial\mathbf{x}}+\frac{\partial\mathbf{v}}{\partial\mathbf{x}}$ |
+
+4. 在此基础上还可以向其他维度进一步拓展。
 
 一个完整的故事：数据科学家（数据$\rightarrow$模型训练）+AI专家（更好的模型）+领域专家（分析用户行为）
 
