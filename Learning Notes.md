@@ -858,7 +858,7 @@ tensor([[0, 1],
 
 ##### · 数学基础
 
-​	对于标量的求导这里不再赘述，为了帮助理解神经网络中的矩阵运算，这里给出一张表展示包含向量/矩阵的求导公式。当给定的$\mathbf{x}$，$\mathbf{y}$为向量时，满足`shape(x)=n, shape(y)=m`
+​	**基本求导**：对于标量的求导这里不再赘述，为了帮助理解神经网络中的矩阵运算，这里给出一张表展示包含向量/矩阵的求导公式。当给定的$\mathbf{x}$，$\mathbf{y}$为向量时，满足`shape(x)=n, shape(y)=m`
 
 1. $\mathbf{y}$为向量，$x$为标量，$\partial\mathbf{y}/\partial x$，遵循规则$\bqty{\frac{\partial y_1}{\partial x},\frac{\partial y_2}{\partial x},\cdots,\frac{\partial y_m}{\partial x}}$。
 
@@ -870,7 +870,7 @@ tensor([[0, 1],
 
 （通过分析可以知道，上述一个标量和一个向量的导数可以视为经过广播机制之后对逐个元素的求导，只有最后一个$\langle\mathbf{u,v}\rangle$需要注意一下）
 
-3. $\mathbf{x}$, $\mathbf{y}$都为向量，则遵循以下运算规则，并在表格中总结了一些常用的类型
+3. $\mathbf{x}$, $\mathbf{y}$都为向量，则遵循以下运算规则，即只要求导和被求导的都为向量，则默认被求导的（这里为$\mathbf{y}$）为列向量，求导的（这里为$\mathbf{x}$）为行向量。这里还在表格中总结了一些常用的求导类型
 
 $$
 \frac{\partial\mathbf{y}}{\partial\mathbf{x}}=
@@ -882,11 +882,105 @@ $$
 \end{bmatrix}
 $$
 
-| $\mathbf{y}$                                    | $\mathbf{a}$ | $\mathbf{x}$ | $\mathbf{Ax}$ | $\mathbf{x}^\mathrm{T}\mathbf{A}$ | $a\mathbf{u}$                                    | $\mathbf{Au}$                                             | $\mathbf{u+v}$                                               |
-| ----------------------------------------------- | ------------ | ------------ | ------------- | --------------------------------- | ------------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------ |
-| $\frac{\partial\mathbf{y}}{\partial\mathbf{x}}$ | $\mathbf{0}$ | $\mathbf{I}$ | $\mathbf{A}$  | $\mathbf{A}^\mathrm{T}$           | $a\frac{\partial\mathbf{u}}{\partial\mathbf{x}}$ | $\mathbf{A}\frac{\partial\mathbf{u}}{\partial\mathbf{x}}$ | $\frac{\partial\mathbf{u}}{\partial\mathbf{x}}+\frac{\partial\mathbf{v}}{\partial\mathbf{x}}$ |
+|                  $\mathbf{y}$                   | $\mathbf{a}$ | $\mathbf{x}$ | $\mathbf{Ax}$ | $\mathbf{x}^\mathrm{T}\mathbf{A}$ |                  $a\mathbf{u}$                   |                       $\mathbf{Au}$                       |                        $\mathbf{u+v}$                        |
+| :---------------------------------------------: | :----------: | :----------: | :-----------: | :-------------------------------: | :----------------------------------------------: | :-------------------------------------------------------: | :----------------------------------------------------------: |
+| $\frac{\partial\mathbf{y}}{\partial\mathbf{x}}$ | $\mathbf{0}$ | $\mathbf{I}$ | $\mathbf{A}$  |      $\mathbf{A}^\mathrm{T}$      | $a\frac{\partial\mathbf{u}}{\partial\mathbf{x}}$ | $\mathbf{A}\frac{\partial\mathbf{u}}{\partial\mathbf{x}}$ | $\frac{\partial\mathbf{u}}{\partial\mathbf{x}}+\frac{\partial\mathbf{v}}{\partial\mathbf{x}}$ |
 
-4. 在此基础上还可以向其他维度进一步拓展。
+4. 在此基础上还可以向其他维度进一步拓展。这里以分子布局为例，分子布局要求的是以分子的维数为前几维的维数，而以分母的维数作为后几维的维数。通常情况对于两个矩阵$\mathbf{Y}\in\mathbb{R}^{m\times n}$和$\mathbf{X}\in\mathbb{R}^{p\times q}$，其求导的结果$\partial\mathbf{Y}/\partial\mathbf{X}$的维数为$\mathbb{R}^{m\times n\times p\times q}$，但是在本课程中$\partial\mathbf{Y}/\partial\mathbf{X}$实际上是$\partial\mathbf{Y}/\partial\pqty{\mathbf{X}^\mathrm{T}}$，所以其维数变为了$\mathbb{R}^{m\times n\times q\times p}$，在本课程后续都遵循这样的规定（若其中维数为1的话则可以直接省去），但是需要在数学中理解矩阵求导的定义。
+
+​	**链式法则**：链式法则是多层嵌套函数求导所遵循的法则，也可借助链式法则辅助一些较为复杂的表达式的求导，这里对标量嵌套函数的求导不再赘述，这里只提及向量的链式法则求导。
+
+​	这里不妨规定有这样一个嵌套函数$y=f\pqty{u}$, $u=g\pqty{x}$，接下来展示当$y,x,u$分别为向量时的情况
+
+|     $\frac{\partial y}{\partial\mathbf{x}}$     | $\frac{\partial y}{\partial u}\frac{\partial u}{\partial\mathbf{x}}$ |  $\pqty{1,n}\rightarrow\pqty{1}\pqty{1,n}$  |
+| :---------------------------------------------: | :----------------------------------------------------------: | :-----------------------------------------: |
+|     $\frac{\partial y}{\partial\mathbf{x}}$     | $\frac{\partial y}{\partial\mathbf{u}}\frac{\partial\mathbf{u}}{\partial\mathbf{x}}$ | $\pqty{1,n}\rightarrow\pqty{1,k}\pqty{k,n}$ |
+| $\frac{\partial\mathbf{y}}{\partial\mathbf{x}}$ | $\frac{\partial\mathbf{y}}{\partial\mathbf{u}}\frac{\partial\mathbf{u}}{\partial\mathbf{x}}$ | $\pqty{m,n}\rightarrow\pqty{m,k}\pqty{k,n}$ |
+
+最后一列为链式法则所展示的中间结果的维数。
+
+​	在计算机进行链式法则进行求导时，一般使用计算图，将代码分解为操作子表示为一个无环图（树图）。自动求导又分为正向累积/前向传播和反向累积/反向传播。
+$$
+\begin{align}
+\text{链式法则：} & \frac{\partial y}{\partial x}=\frac{\partial y}{\partial u_n}\frac{\partial u_n}{\partial u_{n-1}}\cdots\frac{\partial u_2}{\partial u_{1}}\frac{\partial u_1}{\partial x}\\
+\text{正向累积：} & \frac{\partial y}{\partial x}=\frac{\partial y}{\partial u_n}\pqty{\frac{\partial u_n}{\partial u_{n-1}}\pqty{\cdots\pqty{\frac{\partial u_2}{\partial u_{1}}\frac{\partial u_1}{\partial x}}}}\\
+\text{反向累积：} & \frac{\partial y}{\partial x}=\pqty{\pqty{\pqty{\frac{\partial y}{\partial u_n}\frac{\partial u_n}{\partial u_{n-1}}}\cdots}\frac{\partial u_2}{\partial u_{1}}}\frac{\partial u_1}{\partial x}
+\end{align}
+$$
+这里的正向累积和反向累积的计算复杂度都为$\mathcal{O}\pqty{n}$，但是正向累积的内存复杂度为$\mathcal{O}\pqty{n}$，反向累积的内存复杂度为$\mathcal{O}\pqty{1}$。正向累积根据提供的变量和设定的计算符号向前计算并保存计算结果，而反向累积则是依次求导并代入正向累积的结果获取梯度。接下来使用pytorch进行一个简单的反向传播实例展示
+
+```python
+import torch
+x = torch.arange(4.0, requires_grad=True)	//设定一个x，并开启梯度记录的内存grad
+y = 2 * torch.dot(x, x)	//规定y=2|x|^2
+y.backward()	//调用反向传播的函数
+x.grad	//通过y的反向传播得到x向量的梯度（应该为4*x）
+```
+
+需要注意的是，默认情况下pytorch将会累积当前的梯度，因此如果需要查询当前的梯度则要使用`x.grad.zero_()`函数清除原有的梯度。上述为显式的表达，下面给出一个隐式的表达，pytorch的`backward()`函数依旧能正常完成求导。
+
+```python
+import torch
+
+def func(x):
+    b = 2*a
+    while b.norm()<1000:
+        b = b*2
+    if b.sum()>0:
+        return b
+    else:
+        return 100*b
+
+if __name__ == '__main__':
+    a = torch.randn(size=(), requires_grad=True)
+    d = func(a)
+    d.backward()
+    print(a.grad)
+```
+
+​	**对矩阵/向量求导的意义**：有一个可以用于理解对向量求导意义的例子。我们规定向量$\mathbf{x}=\bqty{x_1,x_2}$和标量$y=x_1^2+2x_2^2$，那么他们的求导可表示为$\partial y/\partial\mathbf{x}=\bqty{2x_1,4x_2}$，当$y$有取值的时候，变量$x_1$, $x_2$的取值范围为某一椭圆上的任意一点的平面坐标，将取值的$y$对平面坐标$\pqty{x_1,x_2}$进行求导，得到的则是取值$y$对于平面坐标$\pqty{x_1,x_2}$的梯度方向，也就是平面上$y$取值下降/上升最快的方向。
+
+##### · 基础优化算法
+
+​	**线性回归**：通过线性回归可以进行一些简单的预测，具体是通过已有数据得到具体的模型，再由这一模型的预测结果与现实结果进行对比进一步提升模型的预测准确性。这里将用一个普适性的线性回归例子说明。
+
+​	现在假设要对一个住房进行估值，影响估值的因素可以被列为$\mathbf{x}=\bqty{x_1,x_2,\cdots,x_n}^\mathrm{T}$，这些因素占最终估值的权重可以为$\mathbf{w}=\bqty{w_1,w_2,\cdots,w_n}^\mathrm{T}$，那么最终的估值模型则可由向量形式表示为$y=\mathbf{x}^\mathrm{T}\mathbf{w}+b$，其中$b$为偏置/偏差。比较真实值和预测值就可以得到两者的误差，这里采用损失函数为$\mathcal{L}\pqty{y,\hat{y}}=\frac{1}{2}\pqty{y-\hat{y}}^2$。为了模型更加精准通常需要收集更多数据点（包含$\mathbf{x}$和$y$）作为训练模型的基础，这些数据都被称为训练数据，通常在保证数据质量的前提下越多越好。假设样本数量为n，则影响估值的因素可以为一个矩阵$\mathbf{X}=\bqty{\mathbf{x}_1,\mathbf{x}_2,\cdots,\mathbf{x}_n}^\mathrm{T}$，估值可以为$\mathbf{y}=\bqty{y_1,y_2,\cdots,y_n}^\mathrm{T}$，根据之前的向量形式，估值现在可以重新表示为
+$$
+\mathbf{\hat{y}}=\mathbf{X}\mathbf{w}+b
+$$
+而损失函数则可以被定义为
+$$
+\mathcal{L}\pqty{\mathbf{X,y,w,}b}=\frac{1}{2n}\norm{\mathbf{y-Xw-}b}^2
+$$
+为了得到一个准确的模型，损失函数理应尽可能小，那么参数的学习过程可以表示为
+$$
+\mathbf{w}^*,b^*=\arg\min_{\mathbf{w,b}}\mathcal{L}\pqty{\mathbf{X,y,w,}b}
+$$
+将偏置加入权重后，可以重新定义$\mathbf{X}=\bqty{\mathbf{X},1}$，$\mathbf{w}=\bqty{\mathbf{w,b}}^\mathrm{T}$，损失函数就成为了$\mathcal{L}\pqty{\mathbf{X,y,w}}=\frac{1}{2n}\norm{\mathbf{y-Xw}}^2$，当需要找到使损失函数最小的$\mathbf{w}^*$时，则将损失函数对$\mathbf{w}$求导，并且令导数为0，则可得到最优的$\mathbf{w}^*$
+$$
+\frac{\partial\mathcal{L}\pqty{\mathbf{X,y,w}}}{\partial\mathbf{w}}=\frac{1}{n}\pqty{\mathbf{y-Xw}}^\mathrm{T}\mathbf{X}
+$$
+最终得到最优的$\mathbf{w}^*=\pqty{\mathbf{X}^\mathrm{T}\mathbf{X}}^{-1}\mathbf{X}^\mathrm{T}\mathbf{y}$。
+
+​	**梯度下降**：对于更加普遍的问题，其损失函数为非凸，因此不能直接通过导数为0的方法求得全局最优解，所以通常挑选一个初始值$\mathbf{w}_0$然后重复迭代
+$$
+\mathbf{w}_t=\mathbf{w}_{t-1}-\eta\frac{\partial\mathcal{L}}{\partial\mathbf{w}_{t-1}}
+$$
+其中$\eta$是学习率，而$\partial\mathcal{L}/\partial\mathbf{w}_{t-1}$为变量$\mathbf{w}$的梯度方向，沿梯度的反方向$-\eta$尝试寻找使得$\mathcal{L}$最小的解，其中这个学习率$\eta$是一个人为设置的超参数，对模型性能有较大影响，学习率过低会导致迭代次数增加，计算消耗增加；学习率过高则来回波动难以收敛。
+
+​	通常情况下由于数据点过多，想要完整进行梯度下降对计算资源消耗会很大，因此采用**小批量随机梯度下降**的方法完成对原有梯度下降的替代，这是深度学习中的默认求解算法。
+
+​	随机采样$m$个样本$s_1,s_2,\cdots,s_b$来近似损失函数
+$$
+\mathcal{\tilde{L}}=\frac{1}{m}\sum_{i\in I_m}\mathcal{L}_i\pqty{\mathbf{x}_i,y_i,\mathbf{w}}
+$$
+这里的$m$也是一个超参数。
+
+
+
+
+
+
 
 一个完整的故事：数据科学家（数据$\rightarrow$模型训练）+AI专家（更好的模型）+领域专家（分析用户行为）
 
