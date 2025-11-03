@@ -357,7 +357,7 @@ echo 1600 | sudo tee brightness
 
 ```shell
 foo=bar
-echo $foo/echo "$foo"
+echo $foo / echo "$foo"
 >>>bar
 -----------------------------------
 echo '$foo'
@@ -408,7 +408,7 @@ true && echo "hello"
 
 ```shell
 foo=$(pwd)	//将当前的绝对位置赋值给foo变量
-echo "We are in $(pwd)"	//这里可以利用这样的方式完成变量替换，但是需要用""
+echo "We are in $(pwd) / $foo"	//这里可以利用这样的方式完成变量替换，但是需要用""
 ```
 
 另一个类似的功能叫做进程替换，这里举两个例子
@@ -595,24 +595,6 @@ echo *.[suffix] >> .gitignore	//利用通配符*添加一类文件
 
 `.gitignore`本质上是一个文本文档，可以向其写入所需忽略的文档名或利用通配符规则表述所需忽略的文档特征。`*`匹配不定长字符串，`?`匹配单个字符，`[]`匹配括号中出现的任意字符（`[]`中可以用“1-9”或“1/2/3”表示），`!`表示取反。
 
-**关联本地和远程仓库**
-
-​	可以将本地已经有的和远程已经有的仓库关联起来，不必再每次都使用`git clone`。
-
-```shell
-git remote add [ProjName] [Github_SSH_address]	//将该目录与远程进行关联
-git remote -v	//查看远程仓库的别名和地址
-git branch -M main/[BranchName]	//指定分支名称
-git push -u [ProjName] [BranchName1]:[BranchName2]	//关联本地和远程分支
-git pull [ProjName] [BranchName1]:[BranchName2]	//拉取
-```
-
-​	关联本地和远程的分支意味着上传或拉取，这里的`[ProjName]`指的是在添加远程仓库时的命名的别名，用以找到对应的远程仓库，`[BranchName]`用于本地分支和远程分支对齐。
-
-**在VsCode中使用Git**
-
-​	VsCode是常用的代码编辑器，可以通过VsCode的Git管理功能管理文件，同样可以分为工作区、暂存区和仓库区，还可以直接上传到线上。VsCode可以直接自动跟踪文件的修改和添加。
-
 **分支管理和操作**
 
 ​	分支管理便于大团队项目协作的场景，可以解决多用户冲突的问题，每个分支都可以形成独立的项目。
@@ -638,6 +620,33 @@ git rebase [BranchName]	//将当前分支变基到[BranchName]分支上
 ​	变基操作是找到当前分支和目标分支的共父子节点，然后将当前分支嫁接到目标分支的HEAD指针后。这里需要注意是哪个分支嫁接到哪个分支上。
 
 ​	使用`merge`可以很好保留项目的历史情况，说明提交记录和各分支原本的情况，但是分支图会比较复杂；使用`rebase`能够让项目更加线性和直观，但是会改变历史关系，应避免在共享分支时使用。
+
+**关联本地和远程仓库**
+
+​	可以将本地已经有的和远程已经有的仓库关联起来，不必再每次都使用`git clone`。
+
+​	**本地仓库关联**：可以将本地的仓库直接挂到远程仓库上，可以认为在本地建立了一个与远程仓库相对应的仓库并为这个仓库命名了一个别名，在本地终端的这个别名可以代替远程仓库的地址和名称。
+
+```shell
+git remote add [ProjName] [Github_SSH_address]	//将该目录与远程进行关联
+git remote -v	//查看远程仓库的别名和地址
+git branch -M main/[BranchName]	//指定分支名称
+```
+
+​	**远程分支管理**：
+
+```shell
+git push [ProjName] [BranchName1]:[BranchName2]	//将本地的分支1上传到远程的分支2
+git pull [ProjName] [BranchName2]:[BranchName1]	//从远程的分支2拉取到本地的分支1
+```
+
+​	这里的`[ProjName]`就是前文所述的远程仓库在本地的别名，`[BranchName]`用于指明远程的仓库分支和本地的仓库分支，说明数据从某一个分支到另一个分支的过程。当远程分支和本地分支同名时还可以简写为`git push [ProjName] [BranchName]`等效于`git push [ProjName] [BranchName]:[BranchName]`。
+
+​	在`git push`时，数据从本地仓库的`[BranchName1]`分支提交合并到远程仓库的`[BranchName2]`分支，如果远程仓库中没有所指明的分支`[BranchName2]`，那么远程仓库会自动建立一个名为`[BranchName2]`的分支，因此需要确认远程仓库中是否有对应分支，否则可能建立多余分支造成仓库结构混乱和冗余，同时还需要保障提交的仓库新记录晚于远程仓库中的记录以避免冲突；而在`git pull`时，数据从远程仓库的`[BranchName2]`拉取到本地仓库的`[BranchName1]`并完成分支合并，这一过程同样需要保证远程仓库的记录不早于本地仓库。（ps: 需要注意的是，不管`git push`还是`git pull`一般都不会改变本地的分支结构，只有通过`git branch [BranchName]`才能新建立分支）
+
+**在VsCode中使用Git**
+
+​	VsCode是常用的代码编辑器，可以通过VsCode的Git管理功能管理文件，同样可以分为工作区、暂存区和仓库区，还可以直接上传到线上。VsCode可以直接自动跟踪文件的修改和添加。
 
 #### · GitHub
 
@@ -798,7 +807,7 @@ import torch
 import numpy as np
 x = torch.arange(3, 15)
 x = x.reshape(3, 4)
-x = torch.arange(3, 15, dtype=torch.floar32).reshape(3, 4)	//可以替代上两行
+x = torch.arange(3, 15, dtype=torch.float32).reshape(3, 4)	//可以替代上两行
 y = torch.zeros(2, 3, 4)/torch.ones(2, 3, 4)	//创建一个2×3×4的值全为0/1的张量
 m = np.arange(3, 15)
 z = torch.tensor(m)	//将原来的numpy数组m转化为tensor

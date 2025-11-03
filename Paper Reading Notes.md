@@ -455,6 +455,14 @@ $$
 
 ​	Assume that all waveguides are with fixed height of $h$, and the PASS spans across region $D$ and $\mathcal{M}$, $\mathcal{N}_m$ denote the sets of waveguides and PAs on $m$-th waveguide, respectively. The waveguides are spaced along the $y$-axis with equal interval of $d_y=D_y/\pqty{M-1}\text{m}$
 
+#### · RSMA
+
+##### · An Efficient Max-Min Fair Resource Optimization Algorithm for Rate-Splitting Multiple Access
+
+###### · Abstract
+
+​	The max-min fairness (MMF) problem in rate-splitting multiple access (RSMA) is challenging for its non-convex and non-smooth nature, with coupled beamforming and common rate variables. In this work, we propose a optimization algorithm named extragradient-fractional programming (EG-FP) to address the MMF problem of downlink RSMA without high computational complexity and MMF rate performance degradation. The proposed framework first use FP to convert the original problem into a block-wise convex problem, whose Lagrangian dual is equal to a variational inequality problem and solved by EG, as a subproblem. Based on the above, we discover the optimal beamforming structure and a low-dimensional EG-FP with a transmit antenna computational complexity is introduced then, which is benefit to scenarios with a large scale of antennas, and we also extend this to the imperfect CSI condition. 
+
 #### ·Multicast
 
 ##### · *Intelligent Reflecting Surface Aided Multigroup  Multicast MISO Communication Systems*
@@ -895,7 +903,7 @@ $$
 
 ###### · Abstract
 
-​	This paper focus on a cell-free massive MIMO system enabled to simultaneously unicast and multi-group multicast. The precise achievable downlink spectral efficiency (SE) of unicast and multicast users are derived from ZF and maximum precoding design. This paper formulates a WSE maximization problem with constraints like transmit power, fronthual capacity and QoS to jointly optimize the APs selection and power allocation, then, we reformulate this non-convex problem into a easier structure and an accelerate projected gradient (APG)-based algorithm is adopted to obtain the near-optimal solutions. As comparison, SCA-based algorithm is implemented, and the results indicate the proposed joint optimization approach enhances the WSE in various environments. Moreover, APG-based algorithm reduce computational complexity hugely with considerable performance.
+​	This paper focus on a cell-free massive MIMO system enabled to simultaneously unicast and multi-group multicast. The precise achievable downlink spectral efficiency (SE) of unicast and multicast users are derived from ZF and maximum precoding design. This paper formulates a WSE maximization problem with constraints like transmit power, fronthual capacity and QoS to jointly optimize the APs selection and power allocation, then, we reformulate this non-convex problem into an easier structure and an accelerate projected gradient (APG)-based algorithm is adopted to obtain the near-optimal solutions. As comparison, SCA-based algorithm is implemented, and the results indicate the proposed joint optimization approach enhances the WSE in various environments. Moreover, APG-based algorithm reduce computational complexity hugely with considerable performance.
 
 ###### · System Model
 

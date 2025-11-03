@@ -830,5 +830,25 @@ $$
 
 
 
-
 yinghan.li@mail.utoronto.ca
+
+
+
+
+
+```shell
+#!/bin/bash
+submit()
+{
+month=`date +%m`
+day=`date +%d`
+push_mess="Simon$month$day${1:Update}"
+echo "Starting pushing your Notes"
+cd C:/Users/Simon/Documents/Notes
+git status
+git add .
+git commit -m $push_mess
+git push
+}
+```
+
