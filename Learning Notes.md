@@ -161,7 +161,7 @@ $$
 $$
 \mathbf{H}=a\sqrt{n_tn_r}\exp\pqty{\frac{-j2\pi d}{\lambda_c}}\mathbf{e}_r\pqty{\Omega_r}\mathbf{e}_t\pqty{\Omega_t}^*
 $$
-其中$\mathbf{e}_r\pqty{\cdot}$和$\mathbf{e}_t\pqty{\cdot}$则参考SIMO和MIS中的单位空间特征图，$\sqrt{n_tn_r}$是为了解决$\mathbf{e}_r$和$\mathbf{e}_t$自带的$\sqrt{n_r}$和$\sqrt{n_t}$。通过$\mathbf{e}_r\pqty{\Omega_r}\mathbf{e}_t\pqty{\Omega_t}^*$则可构造MIMO的单位空间特征图，便于理解可以认为是多个MISO或SIMO系统的叠加。显然$\mathbf{H}$秩为1，且有一个非零特征值为$\lambda_1=a\sqrt{n_tn_r}$，则该信道的信道容量为
+其中$\mathbf{e}_r\pqty{\cdot}$和$\mathbf{e}_t\pqty{\cdot}$则参考SIMO和MISO中的单位空间特征图，$\sqrt{n_tn_r}$是为了解决$\mathbf{e}_r$和$\mathbf{e}_t$自带的$\sqrt{n_r}$和$\sqrt{n_t}$。通过$\mathbf{e}_r\pqty{\Omega_r}\mathbf{e}_t\pqty{\Omega_t}^*$则可构造MIMO的单位空间特征图，便于理解可以认为是多个MISO或SIMO系统的叠加。显然$\mathbf{H}$秩为1，且有一个非零特征值为$\lambda_1=a\sqrt{n_tn_r}$，则该信道的信道容量为
 $$
 C=\log\pqty{1+\frac{Pa^2n_tn_r}{N_0}}\ \ \text{bits/s/Hz}
 $$
@@ -386,6 +386,8 @@ $$		//当前程序的进程识别码（？）
 !!		//包含程序指令和参数的完整的上一条命令，常用于sudo下重新执行前一条程序
 ```
 
+调用函数时可能遇到变量为空（未赋值）的情况，可以用`${1:-substitue}`来替代原有空变量。
+
 `$?`所代表的函数返回值可以与`&&`（与操作）和`||`（或操作）搭配，用来判断是否执行后续指令，有如下案例
 
 ```shell
@@ -444,11 +446,11 @@ done
 
 ​	对于常用的一些Shell命令和工具，之前介绍过可以使用`man`命令或命令后加`--help`查询，但是为了进一步获取更加实用的操作指南，我们还可以使用[TLDR](https://tldr.sh/)进行查询并学习实践案例。接下来，介绍一些常用的命令，其他命令和可以在日后使用中学习。
 
-​	`find`命令是查找文件的重要命令，可以搜索当前目录下的所有文件，并根据需求对查找到的文件进行操作
+​	`find`命令是查找文件的重要命令，可以结合`.`搜索当前目录下的所有文件，并根据需求对查找到的文件进行操作
 
 ```shell
 find . -name [filename] -type [filetype]	//查找[filetype]类型的[filename]
-find . -path [filepath] -type f	//查找该目录下的[filepath]文件（常结合通配符）
+find . -path [filepath] -type [type]	//查找该目录下的[filepath]文件（常结合通配符）
 find . -mtime -1	//找到修改日期为一天前的所有文件
 find . -size +[MinSize] -size -[MaxSize] -name [filename]	//范围内的文件
 ----------------------------------------------------------------------
@@ -457,6 +459,8 @@ find . -name [filename].x -exec magick {} {}.y \;	//查找并将替换后缀名x
 ```
 
 通过上述语句就可以根据文件的特征实现对指定文件的查找（指定文件名称、类型、大小、修改时间或指定文件夹下所有文件），例如可以参考上边第二条语句`find . -path '*.py' -type f`找到文件夹下所有`.py`文件。在参数匹配中还可以将`-name`改为`-iname`以不区分大小写。
+
+​	除了常用的`find`，还有`locate`可以用于检索所有地址中包含关键字的文件，其原理也是匹配路径的关键字，例如`locate ~/usr/b`就可以匹配`~/usr/bin/`和`~/usr/batch/`两种目录路径和路径下所有的文件，此外添加`-i`参数还可以设置不区分大小写。
 
 ​	`grep`是对于文件内容进行匹配的重要命令，可以查找包含/不包含某一关键字内容的文件，并输出上下文
 
@@ -470,25 +474,410 @@ grep -v "main"	//输出所有内容中不包含"main"的文件
 
 #### · Linux
 
-​	现行的大部分Linux系统都有方便的图形化界面，但是在进行远程操作（ssh）时最方便的方法是使用命令行直接进行控制和操作，命令行的大部分常用命令在[Missing Class](#· Missing Class)中有所介绍，这里根据使用中遇到的一些常用指令进行补充。（以Ubantu 24.04为例）
+​	现行的大部分Linux系统都有方便的图形化界面，但是在进行远程操作（ssh）时最方便的方法是使用命令行直接进行控制和操作，命令行的大部分常用命令在[Missing Class](#· Missing Class)中有所介绍，或者通过`man`命令查看用法，还可以在网络上直接搜索用法，这里根据使用中遇到的一些常用指令进行补充，并针对远程控制和原机系统级软件部署和配置进行详细说明。（若非特别说明以Ubuntu 22.04为例）
 
-​	更新系统和系统必要依赖
+​	**更新系统和系统必要依赖**
 
 ```shell
-sudo apt update sudo apt upgrade -y	//更新系统
+sudo apt update && sudo apt upgrade -y	//更新系统
 sudo apt install -y build-essential linux-headers-$(uname -r)	//更新依赖
 ```
 
-​	需要查看设备状态信息的时候常用语句
+​	**软件安装**
+
+​	Linux系统中的软件安装分为系统级和用户级，对于两种不同的安装，这里将分别简单介绍。
+
+​	对于一些服务器用户公用的软件，例如miniconda、MATLAB等通常采用系统级软件安装以节省服务器硬盘资源。系统级安装的目录一般都选在`/opt/`、`/usr/bin/`或`/usr/local/`中（这里还是建议统一安装在`/opt/`目录下）。
+
+​	而对于一些只有部分用户才使用的软件，为了用户方便使用可以采用用户级安装，用户级安装的常用目录为`~/opt/`或`~/bin/`（`~`代指`/home/[user_name]`）。
+
+​	**文档编辑**
+
+​	Linux系统中常用的文档编辑命令有`vim`/`vi`和`nano`，其中`nano`命令简洁方便，但功能也较为简单；而`vim`/`vi`则更为复杂，功能也更加强大。两种编辑命令的使用方式都是命令+文件名全称
+
+```shell
+nano [file_name]
+vim [file_name]
+```
+
+​	**nano**：通过`nano`打开文件后直接默认进入编辑状态，通过方向键移动光标即可进行编辑。常用的一些操作总结为以下表格
+
+|   命令   |               功能                |
+| :------: | :-------------------------------: |
+| `Ctrl+o` | 保存文档，输入文档名称后Enter保存 |
+| `Ctrl+x` |  退出文档编辑（会询问是否保存）   |
+| `Ctrl+w` | 输入关键词查找，`Alt+w`查找下一个 |
+| `Ctrl+k` |          剪切当前行内容           |
+| `Ctrl+u` |        粘贴之前剪切的内容         |
+
+​	此外，还有一些在打开文档的时候就可以设置的参数，这里简单介绍一些较为实用的参数`-f`/`--force`强制打开二进制文件，`-v`/`--view`以只读模式打开，`-P`/`--preserve`保留上次编辑位置，`-i`自动缩进，`-E`以指定字符编码方式打开，`-l`启用自动换行，`-w`禁用自动换行。
+
+​	**vim/vi**：这里需要说明的是，`vim`命令是`vi`命令的增强，在保留`vi`命令功能基础上新增了更多功能，这里主要还是以`vim`为主进行介绍。当使用`vim [file_name]`命令后默认进入命令模式。
+
+|     命令      |                功能                 |
+| :-----------: | :---------------------------------: |
+|     `Esc`     | 任何模式下连按两次`Esc`返回命令模式 |
+|      `:`      |      命令模式按`:`进入末行模式      |
+|  `wq`、`q!`   |        保存退出和不保存退出         |
+| `i`、`a`、`o` |     光标前、光标后、新一行插入      |
+
+模式切换：
+进入插入模式：命令模式下按 i（光标前插入）、a（光标后插入）或 o（新行插入）；
+返回命令模式：插入模式下按 ESC 键。
+常用命令（命令模式下）：
+保存并退出：:wq（w 保存，q 退出）；
+不保存退出：:q!（强制退出）；
+搜索：/关键词（回车查找，n 下一个，N 上一个）；
+行操作：
+剪切当前行：dd（可前缀数字，如 3dd 剪切 3 行）；
+粘贴：p（粘贴到光标后）；
+撤销：u；
+重做：Ctrl+r。
+进阶功能（示例）：
+显示行号：:set nu；
+批量替换：:%s/旧内容/新内容/g（% 表示所有行，g 表示全局）；
+分屏：:sp 文件名（横向分屏）、:vsp 文件名（纵向分屏）。
+
+​	**文件传输**
+
+​	目前最为简单直接的方法就是使用`scp`协议进行代码/程序文件的传输，不同系统（Linux/macOS/Windows）均保持一致
+
+```shell
+scp [local_file_path] [user]@[server_IP]:[server_file_path]
+scp [user]@[server_IP]:[server_file_path] [local_file_path]
+```
+
+以上是最基础的文件传输用法，第一行是将本地`local_file_path`路径下的文件传输到IP为`server_IP`服务器中名为`user`用户下的`server_file_path`地址。（这里只能传输到用户能访问的文件夹中）
+
+​	如果传输的是文件夹，则需要加参数`-r`实现文件夹的批量/递归传输，如果远程服务器并非默认端口`22`，则还需要使用参数`-P`指明网络端口，这里给出如下示例展示本地终端将一个文件夹传输到非默认端口（端口号为8088）服务器的命令行，而从服务器下载文件到本地终端则对称类似
+
+```shell
+scp -r -P 8088 [local_file_path] [user]@[server_IP]:[server_file_path]
+```
+
+​	此外，还有其他利用基于`scp`协议或`ssh`协议的相关工具和VsCode插件完成文件传输的方法就不多赘述。
+
+​	**修改静态IP**
+
+```shell
+ip addr	//查看网络接口（如enp0s3/ens18）
+----------------------------------------------------------------------
+sudo nano /etc/netplan/00-installer-config.yaml	//编辑Netplan配置文件
+```
+
+​	需要注意的是，不同Linux的发行版本会使得网络配置文件的地址和形式也不同，因此在打开配置文件进行编辑前需要确认是否存在这样的文件，否则可能导致配置无效（这里参考的是Ubuntu 22.04版本）。使用上一条命令打开编辑器后，将文件中的内容替换为如下
+
+```yaml
+network:
+  ethernets:
+    <interface>:	//替换为实际接口名，如ens18
+      addresses: [192.168.1.100/24]	//静态IP+子网掩码
+      gateway4: 192.168.1.1	//网关
+      nameservers:
+        addresses: [114.114.114.114, 8.8.8.8]	//DNS
+  version: 2
+```
+
+将上述内容修改后保存到文件中，然后运行以下代码应用配置并验证可用性
+
+```shell
+sudo netplan apply
+ip addr show <interface>	//确认IP已变为对应的IP
+ping github.com	//测试联网（能通说明网关和DNS正确）
+```
+
+​	**查看设备硬件配置**
 
 ```shell
 lscpu	//显示CPU的型号、核心数量、线程数、缓存等信息
 cat /proc/cpuinfo	//同样是展示CPU详细信息
+grep -c ^processor /proc/cpuinfo	//查看CPU物理核数
 ----------------------------------------------------------------------
 lspci -nn | grep -i vga	//列出显示设备（包含GPU型号）
 nvidia -smi	//安装完NVIDIA驱动后可以显示GPU的型号、显存使用状态等信息
 radeontop	//显示AMD的显卡情况
+----------------------------------------------------------------------
+free -m | grep Mem | awk '{print $2}'	//打印出设备内存大小
 ```
+
+​	**MUNGE和SLURM安装使用**
+
+​	SLURM是用于服务器资源分配和管理的Linux端软件，可以完成提交任务的顺序运行和任务所需资源的自动分配。SLURM同样还依赖MUNGE辅助其进行`slurmctld`（进程管理）和`slurmd`（进程执行）的合法通信，确保任务执行过程中不会被非法终止或干扰。接下来将通过命令行展示完整的安装和使用过程。
+
+​	首先，需要安装完成MUNGE，以确保之后SLURM配置文件不会报错，以下是MUNGE安装的命令行代码
+
+```shell
+sudo apt install -y munge libmunge-dev libmunge2	//安装MUNGE
+----------------------------------------------------------------------
+sudo /usr/sbin/mungekey
+sudo chmod 400 /etc/munge/munge.key	//生成密钥并改变文件的读写权限
+----------------------------------------------------------------------
+sudo systemctl start munge
+sudo systemctl enable munge	//启动MUNGE并设置开机自启
+```
+
+​	完成MUNGE启动和开机自启动设置后开始SLURM的安装。
+
+```shell
+sudo apt install -y slurm-wlm slurm-wlm-doc	//安装SLURM及依赖
+slurmd -V && slurm -C	//查看SLURM的版本和信息
+```
+
+​	打开SLURM的配置文件并修改配置文件
+
+```shell
+vi /etc/slurm-llnl/slurm.conf	//打开并准备写入配置文件
+```
+
+打开配置文件后需要将以下内容写入（其中部分需要根据服务器情况进行修改）
+
+```ini
+# slurm.conf 配置（双EPYC 9J14×2 + 128G内存 + RTX 4090）
+ControlMachine=NavComLab  # 例如：epyc-server
+ControlAddr=  # 若有固定IP可填写，否则留空
+
+# 基础参数（安全与资源管理优化）
+MpiDefault=none
+ProctrackType=proctrack/cgroup  # 用cgroup隔离进程，精准控制资源
+ReturnToService=1
+SlurmctldPidFile=/var/run/slurm-llnl/slurmctld.pid
+SlurmdPidFile=/var/run/slurm-llnl/slurmd.pid
+SlurmdSpoolDir=/var/spool/slurmd
+SlurmdUser=slurm  # 建议创建slurm用户（sudo useradd -r slurm）
+StateSaveLocation=/var/spool/slurm-llnl
+SwitchType=switch/none
+TaskPlugin=task/cgroup  # 支持CPU/内存/GPU资源限制
+GresTypes=gpu  # 声明集群支持GPU资源
+
+# 计时器（保障服务稳定性）
+KillWait=60  # 任务终止后等待30秒清理资源
+MinJobAge=300  # 任务至少运行5分钟才能被删除（防止误操作）
+SlurmctldTimeout=120  # 控制进程超时时间（秒）
+SlurmdTimeout=300  # 节点进程超时时间（秒）
+
+# 调度配置（高效利用资源）
+FastSchedule=1  # 快速调度小任务
+SchedulerType=sched/backfill  # 启用回填调度，减少资源碎片
+SelectType=select/cons_res  # 按资源（CPU/内存/GPU）分配任务
+SelectTypeParameters=CR_CPU_Memory_GPU  # 同时管理CPU、内存、GPU
+DefMemPerCPU=1024  # 默认每CPU核心分配1GB内存（用户可通过--mem覆盖）
+DefCpuPerTask=4    # 默认每个任务分配4核（用户可通过--cpus-per-task覆盖）
+
+# 5. 日志与记账（默认配置，后续可扩展）
+AccountingStorageType=accounting_storage/none
+ClusterName=epyc_4090_cluster  # 自定义集群名，便于识别
+JobAcctGatherType=jobacct_gather/none
+AllowUsers=*
+
+# 6. 计算节点配置（核心资源声明，已预留系统资源）
+NodeName=NavComLab \
+    CPUs=140 \
+    RealMemory=122880 \
+    Gres=gpu:1 \
+    Sockets=2 \
+    CoresPerSocket=72 \
+    ThreadsPerCore=1 \  # 关闭超线程（若需开启，设为2，CPUs改为280）
+    State=UP  # 节点状态为可用
+
+# 7. 分区配置（队列管理）
+PartitionName=Server1 \
+    Nodes=NavComLab \
+    Default=YES \  # 设为默认分区
+    MaxTime=7-00:00:00 \  # 最大任务运行时间7天
+    MaxJobsPerUser=50 \  # 限制单用户最大任务数（按需调整）
+    State=UP
+```
+
+编辑完成SLURM配置文件后再运行以下代码，重启SLURM并检查是否正确加载配置
+
+```shell
+sudo systemctl restart slurmctld slurmd	//重启SLURM的控制服务和节点服务
+sudo systemctl enable slurmctld slurmd	//设置开机自启动
+sudo systemctl status slurmctld slurmd	//显示active/running即服务启动
+sinfo	//节点状态为UP，表明分区可用，还可查看具体的资源情况（使用/空闲）
+scontrol show node NavComLab	//检查CPUs、RealMemory、Gres配置是否正确
+```
+
+​	**SLURM的日常使用**
+
+​	**任务提交——命令行提交**：在任务提交前，需要先将本地终端确认可以运行的代码/程序传输到远程服务器内方可继续进行任务提交和程序运行。按服务器初始配置，一个任务（一次提交）默认情况下分配的资源是4核心/逻辑核心，平均每核心1GB内存，因此对于有特殊需求的任务（例如需要占用多核心或更多内存资源或使用GPU资源），需要在任务提交时指定所需的具体资源情况。以下示例以MATLAB程序代码为例（Python较为类似）分别展示三种常用情况下的任务提交格式。
+
+```shell
+srun matlab -nodisplay -nosplash -r "script.m"
+srun --cpus-per-task=8 --mem=32G matlab -nodisplay -r "script.m"
+srun --gres=gpu:1 --cpus-per-task=8 --mem=64GB python "script.py"
+```
+
+​	第一行代码是在默认资源分配下（4核心，4GB），在MATLAB环境中以不打开图形用户界面（`-nodisplay`）和禁用启动画面（`-nosplash`）的方式运行程序`script.m`；第二行代码是指明了任务所需CPU核心数（8核心）和内存大小（32GB）的情况下，在不打开图形用户界面的MATLAB环境中运行程序`script.m`；第三行代码是使用一个GPU，并且指定CPU核心数及内存分配的情况下在python环境中运行程序`script.py`。
+
+​	这里需要注意的是，在运行Python代码之前要先确保已经通过`conda`命令激活/进入了指定运行环境，所以更建议通过后续介绍的脚本方式完成任务提交，确保任务运行在正确的环境中，而服务器上还需要自己重新配置相应的运行环境。这里简单给出一个Python代码运行在特定conda环境中的示例
+
+```shell
+srun --gres=gpu:1 --mem=16G bash -c "source /home/user/.../conda.sh && conda activate [env_name] && python script.py"
+```
+
+​	综上所述，通过命令行完成任务提交的核心代码是`srun [server_resource_param] [matlab/python] [code_file]`，其中，服务器分配资源的参数`server_resource_param`部分除了上述比较常用的分配CPU、GPU、内存的配置，还可以有以下可供参考的一些参数选项。
+
+```sehll
+--job-name=[Name]	//给任务起一个别名，方便后续查询（拜托任务ID限制）
+--cpus-per-task=[CPUs]	//指定平均每个任务所需的CPU核心数/逻辑核心数
+--gres=[gpu:nums]	//指定任务分配的GPU资源数nums
+--mem=[Memory_size]	//分配任务的总内存（注意需要给定单位M/G）
+--output=[output_file]	//设置文档记录打印内容（文件后缀一般以.out结尾）
+--error=[error_file]	//设置文档记录报错内容（文件后缀一般以.err结尾）
+--time=[dd-hh:mm:ss]	//设置任务最大运行时间（否则默认7天最大时间）
+--ntasks=[Tasks]	//指定提交任务的数量
+--nodes=[Node]	//指定此次任务使用的节点
+--partition=[Name]	//指定任务运行的集群分区
+```
+
+以上参数按照常用程度和重要性进行排序，其中`nodes`、`partition`两个参数在单服务器使用中不必设置，直接使用默认即可，`ntasks`则需要慎重使用，要区分多任务和单任务下多核心/多线程的使用。
+
+​	**任务提交——脚本提交**：前面主要讲述了一种通过命令行直接完成任务提交的方式，接下来将介绍通过脚本进行任务提交的方式，这种方式更加规范，可以更方便地设置更多参数，配置运行环境并实现脚本的复用，尤其适合使用Python进行深度学习训练等需要加载环境配置资源或其他复用度高、运行时间长任务的场景。
+
+​	**MATLAB**中高复用和长运行时长的任务提交到远程服务器时也可以用脚本提交，以下是一个可供参考的脚本模板，只需完成对应参数的填写即可作为`.sh`脚本提交运行，其中的参数与命令行中的基本类似
+
+```shell
+#!/bin/bash
+#SBATCH --job-name=
+#SBATCH --partition=Server1
+#SBATCH --nodes=NavComLab
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=
+#SBATCH --mem=
+#SBATCH --time=
+#SBATCH --output=
+#SBATCH --error=
+
+module load matlab
+
+cd /home/user/.../files_path
+
+matlab -nodisplay -nosplash -r "parpool(N);run('script(param1,param2).m');delete(gcp);exit;"
+```
+
+​	`#SBATH`列表中的参数是脚本运行的环境参数，也是请求分配任务资源的参数，需要根据任务量评估合理的参数设计；`module load matlab`是加载MATLAB代码运行环境，通常MATLAB完成安装后都会直接加入到环境变量中因此可以省略，但是以防万一建议加上，此外，这里还可以通过`matlab/2025a`指定程序运行在MATLAB的具体版本；`cd`转入到需要执行程序的地址便于找到需要提交的任务。
+
+​	`matlab`语句下的基本用法与前文命令行任务提交中相同，但需要注意的是，`""`内的语句就相当于在MATLAB中直接运行的代码，`parpool(N)`中的并行核心数需要与`cups-per-task`匹配，程序结束后以`delete(gcp);exit;`结尾可以关闭并行池退出MATLAB释放资源。需要运行的`.m`文件可以省略`run()`函数和`.m`后缀，如果需要传入参数直接按照函数的方式传入即可。
+
+​	**Python**进行深度学习用到conda配置的环境时需要确保任务在指定的conda环境中运行，同时还要匹配相应的资源，在简单的命令行中想要确保这些无误较为复杂，同时由于Python程序大都运行在特定的conda环境中，如果每次都需要针对环境单独在命令行中进行配置也较为困难，因此强烈推荐使用脚本提交的方式提高复用度。以下给出一个Python程序任务的提交脚本示例
+```shell
+#!/bin/bash
+#SBATCH --job-name=
+#SBATCH --partition=Server1
+#SBATCH --nodes=NavComLab
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=
+#SBATCH --gres=gpu:1
+#SBATCH --mem=
+#SBATCH --time=
+#SBATCH --output=
+#SBATCH --error=
+
+source /home/user/miniconda/etc/.../conda.sh
+conda activate [env_name]
+
+echo "Current_Python_Path：$(which python)"
+cd /home/user/.../files_path
+
+python train.py
+```
+
+​	编写好对应的任务脚本（`task.sh`）后直接通过`sbatch`提交即可运行。这里为了确保提交的脚本进行的资源设置正确还可以进行一次“干提交”（`--dry-run`）以确保SLURM参数正确
+
+```shell
+# chmod +x task.sh	//通常可以忽略，但是可以改变原本无权限的文件
+sbatch task.sh
+sbatch --dry-run task.sh	//“干提交”验证SLURM参数正确
+```
+
+​	**任务运行状况**：在任务运行过程中还有一些常用的语句用以监视任务运行或服务器当前的状况（查看任务是否成功运行或当前是否有空余资源），以下展示一系列命令的用法，便于确认任务正确运行和查看任务运行进展
+
+​	查看任务的详细信息的命令有多种，特别是针对NVIDIA的GPU还有专用监视状态的命令。考虑到常用的几种情况，这里主要介绍`squeue`、`squeue`、``
+
+```shell
+squeue	//直接查询现在所有任务列表
+squeue -u [user_name]/$USER	//查看用户[user_name]提交的任务列表
+squeue -p [partition]	//显示指定分区的任务列表
+squeue --format=
+```
+
+​	`squeue`是最常用的查询任务列表状况的命令，用于查询活跃任务/实时任务队列（运行、排队、刚结束的任务等），告知当前服务器任务队列排序情况，通常情况下会返回任务ID、分区、任务名称、提交者、状态（`R`运行中、`PD`排队等待、`CG`即将完成、`CD`已完成、`F`运行失败、`ST`停止）、已运行时间、节点和节点列表，若为正在等待任务，最后一列的括号中为等待原因（`Resources`等待分配资源、`Priority`优先级、`Dependency`等待依赖/前序任务）。而最后一行的`--format`则可以自定义需要的输出内容（`%i`任务ID、`%j`任务名称、`%t`状态、`%P`分区、`%R`等待原因、`%M`已运行时间）。
+
+```shell
+sstat	//查询正在运行的任务状况
+sstat -j [job_ID] -i [s]	//每[s]秒查询一次运行任务[job_ID]的状况
+sstat -u [user_name]/$USER	//查询[user_name]用户正在运行的任务列表
+sstat -P --format=JobID,CPU,MaxRSS	//查询对应消息并竖线分隔（-P）
+```
+
+​	`sstat`是专门用于查询正在运行中的任务和实时资源使用情况，因此常配合`-i`参数使用不断刷新，而`--format`则可以帮助我们聚焦于我们需要关注的参数，其中的`MaxRSS`单位通常为KB，需要结合分配内存大小`--mem`判断是否超配。
+
+​	与`sstat`相对的，SLURM也有查询所有历史任务的命令`sacct`，并返回任务生命周期（提交/开始/结束时间），监视任务是否完成、完成总时间和完成情况（失败原因）
+
+```shell
+sacct	//查询历史任务的情况
+sacct -X	//仅显示主任务不显示子任务
+sacct -j [job_ID]	//显示[job_ID]历史任务的状况
+sacct -u [user_name]/$USER	//显示[user_name]用户历史任务的状况
+sacct --starttime [time1] --endtime[time2]	//设置时间范围查看
+```
+
+`--format`参数的用法和`sstat`类似，这里不赘述，这里还多了一个设置起止时间范围的筛选功能。
+
+```shell
+scontrol show node NavComLab	//查看当前服务器集群节点的所有任务状态
+scontrol show job [job_ID]	//查看[job_ID]任务的运行详细状况
+scontrol show user [user_name]/$USER	//查看用户[user_name]任务情况
+```
+
+​	`scontrol`的输出信息包括任务ID、任务所属用户、分区、节点、占用资源情况、开始结束时间、当前状况（`RUNNING/PENDING`），如在等待也会显示等待原因`Resources`资源、`Priority`优先级等。当设置为查看用户时，可以用`$USER`查看当前用户提交任务的情况。但是由于`scontrol`只能显示部分任务，且显示方式比较繁杂要呈现很多参数和状态，无法呈现表格状的信息，所有一般不常用`scontrol`进行任务运行状况监看。
+
+​	还有使用NVIDIA显卡驱动自带的命令返回GPU运行状况的命令
+
+```shell
+navidia-smi	//直接通过NVIDIA命令监控GPU使用情况
+watch -n [s] nvidia-smi	//每[s]秒返回一次GPU使用状况
+```
+
+​	`sinfo`命令是查看**分区整体**情况的命令，`-N`参数表示按照节点而非分区展示，`-p`指定分区进行查询，`-l`设置为展示详细信息，`--format`参数同样是设置打印格式，其中的`%N`、`%T`、`%C`、`%m`分别表示节点名称、节点状态、CPU使用情况和内存总量。这些参数都可以缺省。
+
+```shell
+sinfo -N -p [partition] -l --format="%N %T %C %m"
+```
+
+​	**任务终止**：通常使用`scancel`命令即可终止对应的任务
+
+```shell
+scancel [job_ID]	//取消指定的[job_ID]任务
+scancel -u [user_name]	//取消用户[user_name]的任务（包括正在运行的）
+scancel -u [user_name] -t [state]	//设置取消对应用户某一状态的任务
+scancel -u [user_name] -p [partition]	//设置取消某一分区的任务
+```
+
+​	`scancel`命令可以终止一切在运行中或者在队列中已经提交的任务，建议直接使用任务ID以精确终止，在需要批量终止任务则需要非常小心注意终止的范围，使用`-u`、`-t`、`-p`参数分别限定批量终止的用户、状态和分区范围。
+
+**常见需要注意的问题**：
+
+1. 如果SLURM的`slurmctld`启动失败，则通过命令`sudo tail -f /var/log/slurm-llnl/slurmctld.log`查看原因，通常是因为`slurm.conf`语法错误，可以使用`slurm -C`检查是否硬件与配置匹配，之后重新启动MUNGE和SLURM再尝试；
+2. 若发现显示的节点状态为`DOWN`，运行代码`scontrol update NodeName=task-server State=RESUME`恢复；
+3. 如果MATLAB中设置了`parpool(N)`或者使用了`parfor`，则需要通过SLURM分配相应的CPU核心，避免资源不足或浪费，Python中若使用了多线程函数（例如DataLoader多进程等）也需要分配核心数不少于线程数；
+
+
+
+
+
+
+
+
+
+
+
+
+
+​	
+
+
 
 ​	安装CUDA Toolkit的流程
 
@@ -965,11 +1354,11 @@ $$
 $$
 \mathbf{w}^*,b^*=\arg\min_{\mathbf{w,b}}\mathcal{L}\pqty{\mathbf{X,y,w,}b}
 $$
-将偏置加入权重后，可以重新定义$\mathbf{X}=\bqty{\mathbf{X},1}$，$\mathbf{w}=\bqty{\mathbf{w,b}}^\mathrm{T}$，损失函数就成为了$\mathcal{L}\pqty{\mathbf{X,y,w}}=\frac{1}{2n}\norm{\mathbf{y-Xw}}^2$，当需要找到使损失函数最小的$\mathbf{w}^*$时，则将损失函数对$\mathbf{w}$求导，并且令导数为0，则可得到最优的$\mathbf{w}^*$
+将偏置加入权重后，可以重新定义$\mathbf{X}=\bqty{\mathbf{X},1}$，$\mathbf{w}=\bqty{\mathbf{w,b}}^\mathrm{T}$，损失函数就成为了$\mathcal{L}\pqty{\mathbf{X,y,w}}=\frac{1}{2n}\norm{\mathbf{y-Xw}}^2$，**很明显可以看出，这里的损失函数$\mathcal{L}$是一个仅仅和$\mathbf{w}$相关的函数，所以要求损失函数$\mathcal{L}$的值最小，就要对$\mathbf{w}$求导并使其等于0**，则可得到最优的$\mathbf{w}^*$
 $$
 \frac{\partial\mathcal{L}\pqty{\mathbf{X,y,w}}}{\partial\mathbf{w}}=\frac{1}{n}\pqty{\mathbf{y-Xw}}^\mathrm{T}\mathbf{X}
 $$
-最终得到最优的$\mathbf{w}^*=\pqty{\mathbf{X}^\mathrm{T}\mathbf{X}}^{-1}\mathbf{X}^\mathrm{T}\mathbf{y}$。
+最终得到可以用解析解表示的最优$\mathbf{w}^*=\pqty{\mathbf{X}^\mathrm{T}\mathbf{X}}^{-1}\mathbf{X}^\mathrm{T}\mathbf{y}$。
 
 ​	**梯度下降**：对于更加普遍的问题，其损失函数为非凸，因此不能直接通过导数为0的方法求得全局最优解，所以通常挑选一个初始值$\mathbf{w}_0$然后重复迭代
 $$
@@ -977,13 +1366,12 @@ $$
 $$
 其中$\eta$是学习率，而$\partial\mathcal{L}/\partial\mathbf{w}_{t-1}$为变量$\mathbf{w}$的梯度方向，沿梯度的反方向$-\eta$尝试寻找使得$\mathcal{L}$最小的解，其中这个学习率$\eta$是一个人为设置的超参数，对模型性能有较大影响，学习率过低会导致迭代次数增加，计算消耗增加；学习率过高则来回波动难以收敛。
 
-​	通常情况下由于数据点过多，想要完整进行梯度下降对计算资源消耗会很大，因此采用**小批量随机梯度下降**的方法完成对原有梯度下降的替代，这是深度学习中的默认求解算法。
+​	通常情况下由于数据点过多，想要完整进行梯度下降对计算资源消耗会很大，因此采用**小批量随机梯度下降**的方法完成对原有梯度下降的替代，这是深度学习中的默认求解算法。随机采样$m$个样本$s_1,s_2,\cdots,s_b$来近似损失函数，这里的$m$也是一个超参数。
 
-​	随机采样$m$个样本$s_1,s_2,\cdots,s_b$来近似损失函数
 $$
 \mathcal{\tilde{L}}=\frac{1}{m}\sum_{i\in I_m}\mathcal{L}_i\pqty{\mathbf{x}_i,y_i,\mathbf{w}}
 $$
-这里的$m$也是一个超参数。
+
 
 
 

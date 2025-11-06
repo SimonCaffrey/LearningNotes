@@ -925,7 +925,7 @@ where $\Psi_{n,p}\in\mathbb{C}^{L\times\tau}$ is the addictive white Gaussian no
 $$
 \check{\mathbf{y}}_{n,p,u}=\mathbf{Y}_{n,p}\phi_u=\sqrt{\tau p_\text{ul}}\mathbf{c}_{n,u}+\psi'_{n,p}
 $$
-where $\psi'_{n,p}=\Psi_{n,p}\phi_u\sim\mathcal{CN}\pqty{\mathbf{0,I}_L}$ can be easily gained. Each AP can estimate the unicast user channel and further minimize the backhaul signaling. The MMSE estimate of $\mathbf{c}_{n,u}\in\mathbb{C}^{L\times1}$ is 
+where $\psi'_{n,p}=\Psi_{n,p}\phi_u\sim\mathcal{CN}\pqty{\mathbf{0,I}_L}$ can be easily gained. Each AP can estimate the unicast user channel and further minimize the backhaul signaling. The MMSE estimate of $\mathbf{c}_{n,u}\in\mathbb{C}^{L\times1}$ is
 $$
 \begin{align}
 \hat{\mathbf{c}}_{n,u}&=\frac{\mathbb{E}\qty{\mathbf{c}_{n,u}\check{\mathbf{y}}_{n,p,u}^\mathrm{H}}}{\mathbb{E}\qty{\check{\mathbf{y}}_{n,p,u}\check{\mathbf{y}}_{n,p,u}^\mathrm{H}}}\cdot\check{\mathbf{y}}_{n,p,u}=\frac{\mathbb{E}\qty{\sqrt{\tau p_\text{ul}}\mathbf{c}_{n,u}\mathbf{c}_{n,u}^\mathrm{H}}}{\mathbb{E}\qty{\tau p_\text{ul}\mathbf{c}_{n,u}\mathbf{c}_{n,u}^\mathrm{H}+\psi_{n,p}'\psi_{n,p}'^\mathrm{H}}}\cdot\check{\mathbf{y}}_{n,p,u}\\
