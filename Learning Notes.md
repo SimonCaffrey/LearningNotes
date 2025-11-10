@@ -275,7 +275,7 @@ $$
 
 #### · Missing Class
 
-**Shell**
+**Shell/Bash**
 
 ​	这里的命令行和操作大多都在Linux上实现，虽然大多数在Windows和MacOS上也有类似操作，但是可能存在部分不兼容问题，建议可以学习和记录以便之后能够在Linux更快上手操作。
 
@@ -467,10 +467,248 @@ find . -name [filename].x -exec magick {} {}.y \;	//查找并将替换后缀名x
 ```shell
 grep -C 5 "main" [filename]	//查找文件中是否包含"main"字符并输出前后文5行
 grep -R "main"	//在当前目录下递归搜索所有包含"main"的文件并输出
-grep -v "main"	//输出所有内容中不包含"main"的文件
+grep -i "main" [filename]	//不严格要求大小写匹配查找"main"
+grep -v "main"	//输出当前目录下内容中不包含"main"的文件
+grep -E "a|b"	//扩展正则，匹配a或b都可以
 ```
 
+​	除了`grep`，还有另一个命令工具`ripgrep`/`rg`同样可以基于正则表达式查找文件内容且查找速度比`grep`更快。
+
+```shell
+rg --files-with-match "^#\!" -t sh
+rg --files-without-match "import torch" -t py
+rg --stats "main" [path] -t py	//stats展示更多信息
+```
+
+​	`rg`兼容`grep`的所有功能，还可以通过`--type`/`-t`限制查找文件类别，也可以通过`--files-with-match`/`--files-without-match`仅输出匹配/不匹配内容的文件路径。第一行命令中的`"^#\!"`是要求匹配一行开始的意思。
+
 ​	历史命令对于Shell使用非常重要，通过上键下键可以查询上一条或下一条命令，而直接使用`history`可以直接访问之前的所有历史命令。利用管道的特性还可以结合`grep`语句实现命令的搜索，例如`history | grep "find"`。还可以使用`Ctrl+R`通过关键字搜索历史命令记录。
+
+​	还有一种常用于交互式模糊查找的命令工具`fzf`，命令接收到输入流，然后作为输出流打印，用户可以在查找内容的同时查看内容，并通过输入需要查找的关键字进行查找。`cat content.txt | fzf`然后就可以输入需查找的内容了。
+
+​	一般情况下`-R`就可以递归返回当前目录下所有文件（包括文件夹内的文件，所以称之为递归），但是这样的方法并不直观，因此可以结合`tree`命令展示文件夹内更加清晰的分支结构。
+
+**Job Management**
+
+​	`bash`中有丰富的任务管理和控制功能，同样依赖于一些常用的命令实现，接下来通过一些命令功能的使用和解释展示这些命令的使用方法
+
+```shell
+sleep 1000	//当前窗口休眠1000s
+nohup sleep 1000 &	//nohup和&配合使用使得中间的语句被放到后台执行
+```
+
+​	上述两条语句展示了程序后台运行的实例，放到后台运行意味着程序也是正常运行，但是不必连接到当前的标准输出流，我们可以通过`job`随时查看任务运行的情况，但是程序又不用在前台占用输出流和屏幕。通过`bg`或者`fg`又可以将原本暂停的任务放到后台或者前台继续运行
+
+```shell
+jobs	//查看当前任务列表（包括前台和后台运行中或停止的任务）
+bg/fg %[N]	//将暂停的任务[N]放到后台/前台继续运行
+```
+
+除了利用快捷键`Ctrl+c`用于终止任务，`Ctrl+z`用于暂停任务，还可以直接使用`kill`命令完成对应任务的暂停和终止
+
+```shell
+kill -STOP %[N]	//暂停任务[N]
+kill -HUP %[N]	//挂起任务[N]
+kill -KILL %[N]	//彻底杀死/终止任务[N]
+```
+
+​	`kill`是功能非常丰富的语句，配合不同的参数可以实现不同的效果。`-STOP`参数下，`kill`将任务`[N]`暂停（暂停但不终止，此时使用`jobs`命令查看任务列表，任务`[N]`的状态为`suspended`，正常应为`running`）；`-HUP`参数下，`kill`将任务`[N]`挂起（暂时可以理解为在前台终止），如果对应的任务使用了`nohup`则任务本来就在后台运行不接受挂起了，因此命令`kill -HUP`对这类命令无效；`-KILL`下，`kill`将任务`[N]`彻底终止，对于所有任务都有效。
+
+​	上述任务管理其实都是依赖于`bash`/`shell`中信号的传递，系统的程序管理器接收到信号就根据参数和指明的任务做出对应的反应，信号中有很多非常类似的信号，比如都是终止（`SIGHUP`/`SIGINT`/`SIGTERM`）或暂停（`SIGSTOP`/`SIGTSTP`）对应程序，但是在实际中也有细微的差别，了解一些常见的信号有助于我们加深对任务管理的理解，同时帮助我们更好使用信号并规避这些信号带来的问题，例如规避误操作的任务终止/暂停影响必要程序的运行
+
+```python
+#!/usr/bin/env python
+import signal, time
+def handler
+	print("SIGINT RECEIVED, JOB STILL RUNNING")
+    
+signal.signal(signal.SIGINT, handler)
+i=0
+while True:
+    time.sleep(1)
+    print("\r{}".format(i),end="")
+    i=i+1
+```
+
+上述程序中就展示了利用对控制信号的理解避免程序被误终止，`signal.signal(signal.SIGINT, handler)`，意思是接收到`SIGINT`信号后不执行原有的终止流程，而是进入到`handler`函数中，这样就避免了误终止。但是有些程序也是无法被软件捕获的，例如`SIGKILL`。
+
+​	需要说明的是，如果访问服务器时，当前用户退出/注销之后，程序就会被挂起（管理器发送`SIGHUP`命令），如果设置的程序是`nohup`则不受影响。
+
+**Terminate Multiplexer**
+
+​	以往要是想同时运行多个程序通常需要手动打开多个页面，而命令行其实内置了一些非常方便的方法解决这个问题，以前可以使用`screen`命令管理一个窗口下的多个复用窗口或面板，现在推荐学习和使用更加先进灵活的命令`tmux`。在学习终端复用之前，需要明确三个概念，会话（Sessions）、窗口（Windows）、面板（Panes），这三个概念是从大到小依次包含的关系，通常我们打开的页面就是一个会话，可以打开多个页面，而在一个对话下可以打开多个窗口，窗口类似于浏览器的Tabs，**但是不同于Windows中使用命令行时可以多开页面，这样的页面在这里理解为会话**，每个窗口中还可以复用多个面板，类似于分屏使用。在这三种复用情况下，命令行终端都是在同样的环境下运行的，相当于在这一环境下分成了多个独立但相同的运行环境。接下来将展示终端复用的具体使用。
+
+```shell
+tmux	//默认命令，打开一个新的会话
+tmux ls	//展示会话列表
+tmux a	-t [Session_Name] //切换到[Session_Name]会话
+tmux new -t [Session_Name]	//创建名为[Session_Name]新会话
+```
+
+上述命令行主要介绍了通过`tmux`命令进行会话级的复用管理，除了使用`tmux`命令，还有更加方便地使用快捷键的管理方式，例如使用`Ctrl+a+d`用于会话的切换。
+
+​	接下来将直接给出窗口级管理的快捷键操作
+
+|     快捷键     |         操作          |
+| :------------: | :-------------------: |
+|   `Prefix+c`   |      创建新窗口       |
+|   `Prefix+p`   |   切换到上一个窗口    |
+|   `Prefix+n`   |   切换到下一个窗口    |
+| `Prefix+[Num]` | 切换到第`[Num]`个窗口 |
+
+此外为了便于记忆和管理，还可以对窗口重命名。
+
+​	而为了在同一个界面/窗口下能同时看到多个命令行终端，这就需要在面板级进行管理，接下来直接给出面板级管理的快捷键操作
+
+|      快捷键      |            操作            |
+| :--------------: | :------------------------: |
+|     `Prefix`     | 将当前界面分成两个不同面板 |
+|    `Prefix+%`    |     将当前界面竖分为二     |
+|   `Prefix+''`    |     将当前界面横分为二     |
+|    `Prefix+x`    |    退出面板，等同于exit    |
+|    `Prefix+o`    |      各面板间循环切换      |
+|    `Prefix+z`    |        当前面板放大        |
+| `Prefix+[Space]` |    所有面板竖向等距分布    |
+| `Prefix+方向键`  |       按方向切换面板       |
+
+**alias**
+
+​	对于使用命令行过程中遇到的命令过长的问题可以通过`alias`命令设置命令别名简化命令输入
+
+```shell
+alias gs="git status"
+alias mv="mv -i"
+alias mv	//查询某一别名代指的具体命令
+```
+
+这里的`gs="git status"`是一个参数，其间不要有空格，否则会报错。之后，再运行`gs`就相当于运行了`git status`了；上述第二行命令，提供给了另一种思路，当某一命令的某一参数我们总是需要使用，则可以通过这样的命令简化我们的命令使用了。此外，别名不仅可以代替繁杂的命令行输入，还可以管理标准流输出，例如每次输入命令行的前面指示的当前位置总是被`~/`省略，那么也可以通过设置别名将`~/`重新配置为绝对路径，在其他标准流输出的地方也可以采用类似的方法重新设置输出显示。
+
+​	可是这样设置的别名在终端关闭后便不能再使用，因此我们可以编辑`.bashrc`文件存储这样的别名配置（文件通常需要放在`~/.ssh/config/.bashrc`），不必每次打开终端都需要手动重新配置别名。而一些其他的常用工具，如vim也有自己的配置文件`.vimrc`提示打开vim软件时的加载配置。
+
+​	在Github中有很多人分享了自己的dotfiles，可以通过学习和fork他们的这些dotfiles了解更多配置文件的编辑和配置方式及效果。同样，自己也可以将自己的配置文件通过git进行管理和分享。考虑到git无法管理这些配置文件常用的储存目录，所以可以单独建立一个文件夹用于储存dotfiles文件，然后将系统中原有的dotfiles的内容修改为链接到真正dotfiles的地址，同时实现系统能读取配置，git能完成管理。
+
+```shell
+ln -s [path]
+```
+
+**SSH**
+
+​	SSH是一种远程安全数据传输协议，需要现在Windows系统上安装OpenSSH客户端和服务器端并在后台保持开启。检验是否安装成功并且正确运行ssh
+
+```shell
+Get-Service -Name *ssh*	//抓取是否正在运行SSH（确保自动启动）
+netstat -an | findstr : 22	//确认是否正确监听22端口
+```
+
+​	**内网连接**：内网连接适用于处于同一局域网或者目标对象为公网IP的连接设备
+
+```shell
+ssh "UserName"@IP_address	//连接该IP地址中的用户"UserName"
+```
+
+这一代码可以在终端中直接使用这样就可以跳转到对应主机的终端，然后利用命令行完成操作；也可以在VsCode上安装Remote -ssh插件后，添加远程主机输入上述代码，可访问的远程主机可在VsCode中统一管理（还可修改主机在本地的命名），通过VsCode打开对应主机，就可以更加清晰直观借助GUI对文件进行操作。
+
+​	`ssh`命令不止可以实现连接，还可以配合其他语句，甚至配合管道机制进行使用
+
+```shell
+ssh "UserName"@IP_address ls -l | grep "*.iso"
+```
+
+​	为了实现便捷的免密访问，可以利用ssh的密钥机制。
+
+```shell
+ssh-keygen -t rsa -b 4096	//生成-t类型-b长度的一对密钥
+ssh-copy-id -i [local_address] "UserName"@IP_address	//-i 公钥地址
+```
+
+运行第一行代码会生成一个公钥一个私钥密钥对，同时会提示你进行命名，完成命名后会设置密码用于私钥的使用。最终`.pub`文件为公钥，另一个无后缀的为私钥。可以通过`cat`（windows）或`vi`（Linux）完成公钥的读取。注意，私钥是不能随意泄露的。部署好了ssh公钥到目标主机后就可以免密登录访问目标主机文件并进行操作。运行第二行则将密钥拷贝至远程服务器并设置为免密登录。为了更方便地进行访问不必每次都输入一长串“用户名+IP”，还可以配置文件`~/.ssh/config`，之后只需要输入`ssh Server`即可
+
+```ini
+Host Server
+	User Simon
+	HostName IP_address
+	IdentityFile ~/.ssh/[ssh_key]
+	RemoteForward localhost:
+```
+
+​	**文件传输**：目前最为简单直接的方法就是使用`scp`协议进行代码/程序文件的传输，不同系统（Linux/macOS/Windows）均保持一致
+
+```shell
+scp [local_file_path] [user]@[server_IP]:[server_file_path]
+scp [user]@[server_IP]:[server_file_path] [local_file_path]
+```
+
+以上是最基础的文件传输用法，第一行是将本地`local_file_path`路径下的文件传输到IP为`server_IP`服务器中名为`user`用户下的`server_file_path`地址。（这里只能传输到用户能访问的文件夹中）
+
+​	如果传输的是文件夹，则需要加参数`-r`实现文件夹的批量/递归传输，如果远程服务器并非默认端口`22`，则还需要使用参数`-P`指明网络端口，这里给出如下示例展示本地终端将一个文件夹传输到非默认端口（端口号为8088）服务器的命令行，而从服务器下载文件到本地终端则对称类似
+
+```shell
+scp -r -P 8088 [local_file_path] [user]@[server_IP]:[server_file_path]
+```
+
+​	此外，考虑到有较大文件的传输需求，`scp`协议总是在断点从头开始传输，而`rsync`命令则能够实现断点续传，并能实现检查文件是否已经存在被复制。
+
+​	**非内网连接**：适用于进行连接的两台主机不在同一局域网下，且双方均无公网IP，但是依旧有远程进行文件管理和操作的需求。这里采用frp进行内网穿透。
+
+```shell
+sudo vim etc/hosts	//MacOS超级管理员模式下的Linux（打开后加入桥服务器IP）
+echo [ip_address] >> C:\Windows\System32\drivers\etc\hosts	//Windows
+```
+
+根据请求联网主机的系统版本和类型不同，运行上述代码打开不同系统下的`hosts`文件，在`hosts`文件中添加桥服务器的公网IP地址（还可在添加桥服务器公网IP地址时通过`[ip_address] alias`设置该IP地址的别名，便于之后使用）
+
+​	*1.* 从github中下载开源软件frp，根据桥服务器和目标主机（服务器）的系统类型下载对应版本的frp，其中frps部分为桥服务器的程序及配置文件；frpc为目标主机的程序及配置文件（在不同设备上保留必要的文件，其余可删去）。*2.* 在配置文件中，大部分保留原有设置即可，需要时可以再读配置代码修改，这一过程需要注意和修改的只有frpc.ini文件中server_addr改为桥服务器的公网IP。*3.* 将完成修改的配置文件分别拷贝到对应设备，并根据配置文件开放云服务器上的对应端口（设置为TCP协议）
+
+​	接下来需要分别启动桥服务器和目标主机上的frp程序。在分别执行以下代码之前需要将命令行转至frps或frpc文件夹
+
+```shell
+./frps -c ./frps.ini	//启动桥服务器端的frps程序
+./frpc -c ./frpc.ini	//启动目标主机端的frpc程序
+```
+
+上述命令可能由于不同系统有细微区别，但是大致相同。配置完成后，在使用中，如果希望（经由桥服务器）连接目标主机进行操作，则需要执行以下代码
+
+```shell
+ssh -p [in_port] "UserName"@IP_address	//连接目标主机
+```
+
+运行上述代码即可完成连接。需要注意的是，其中`in_port`是指定端口，是在桥服务器端设置的入口（也就是桥服务器的配置文件说明的数据接收端口），`UserName`是目标主机的用户名，而`IP_address`是桥服务器的公网IP。
+
+​	上述过程只满足了手动启动，通过systemd中的文件可以完成自动启动。找到frps文件夹中的frps.service复制到`/lib/systemd/system/frps.service`，并将`User`一项改为当前用户的用户名（桥服务器的用户名）；`ExectStart`一项修改为`frps -c frps.ini`命令，且其中的文件应为文件的绝对路径（`pwd`可查看绝对路径）。之后运行以下代码
+
+```
+systemctl daemon-reload
+systemctl enable frps
+systemctl start frps
+systemctl status frps
+```
+
+运行上述代码期间可能需要输入多次密码，待最后一次代码执行完成后，若找到`Active:active`即配置桥服务器自启动成功。
+
+如果目标主机为Linux系统，则将上述frps改为frpc即可。
+
+如果目标主机为Windows系统，则建立一个内容如下的`.bat`文件
+
+```bat
+@echo off
+
+if not defined TAG{
+	set TAG=1
+	start wt -p "cmd" %0
+	exit
+}
+:home
+frpc -c frpc.ini
+goto home
+```
+
+并将上述`.bat`文件的快捷方式放置在`C:\Users\[Your_User_Name]\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup`中即完成Windows系统的目标主机的自启动。
+
+​	**ZeroTier**：还有另一种可以凭借ZeroTier完成内网穿透的方法，这种方法非常简单便捷且不需要额外的公网IP服务器，实际传输速度也几乎仅和双端的网络环境有关，只需要安装ZeroTier软件即可。接下来，将参考[ZeroTier内网穿透实现远程服务器访问](https://blog.csdn.net/Leesnwen/article/details/132124196)的内容介绍这一种方案下实现稳定内网穿透的具体操作。
+
+
+
+
 
 #### · Linux
 
@@ -538,24 +776,7 @@ vim [file_name]
 批量替换：:%s/旧内容/新内容/g（% 表示所有行，g 表示全局）；
 分屏：:sp 文件名（横向分屏）、:vsp 文件名（纵向分屏）。
 
-​	**文件传输**
 
-​	目前最为简单直接的方法就是使用`scp`协议进行代码/程序文件的传输，不同系统（Linux/macOS/Windows）均保持一致
-
-```shell
-scp [local_file_path] [user]@[server_IP]:[server_file_path]
-scp [user]@[server_IP]:[server_file_path] [local_file_path]
-```
-
-以上是最基础的文件传输用法，第一行是将本地`local_file_path`路径下的文件传输到IP为`server_IP`服务器中名为`user`用户下的`server_file_path`地址。（这里只能传输到用户能访问的文件夹中）
-
-​	如果传输的是文件夹，则需要加参数`-r`实现文件夹的批量/递归传输，如果远程服务器并非默认端口`22`，则还需要使用参数`-P`指明网络端口，这里给出如下示例展示本地终端将一个文件夹传输到非默认端口（端口号为8088）服务器的命令行，而从服务器下载文件到本地终端则对称类似
-
-```shell
-scp -r -P 8088 [local_file_path] [user]@[server_IP]:[server_file_path]
-```
-
-​	此外，还有其他利用基于`scp`协议或`ssh`协议的相关工具和VsCode插件完成文件传输的方法就不多赘述。
 
 ​	**修改静态IP**
 
@@ -1043,16 +1264,14 @@ git pull [ProjName] [BranchName2]:[BranchName1]	//从远程的分支2拉取到�
 
 #### · SSH
 
-​	SSH是一种远程安全数据传输协议，需要现在Windows系统上安装OpenSSH客户端和服务器端。检验是否安装成功并且正确运行ssh
+​	SSH是一种远程安全数据传输协议，需要现在Windows系统上安装OpenSSH客户端和服务器端并在后台保持开启。检验是否安装成功并且正确运行ssh
 
 ```shell
 Get-Service -Name *ssh*	//抓取是否正在运行SSH（确保自动启动）
 netstat -an | findstr : 22	//确认是否正确监听22端口
 ```
 
-**内网连接**
-
-​	内网连接适用于处于同一局域网或者目标对象为公网IP的连接设备
+​	**内网连接**：内网连接适用于处于同一局域网或者目标对象为公网IP的连接设备
 
 ```shell
 ssh "UserName"@IP_address	//连接该IP地址中的用户"UserName"
@@ -1060,18 +1279,47 @@ ssh "UserName"@IP_address	//连接该IP地址中的用户"UserName"
 
 这一代码可以在终端中直接使用这样就可以跳转到对应主机的终端，然后利用命令行完成操作；也可以在VsCode上安装Remote -ssh插件后，添加远程主机输入上述代码，可访问的远程主机可在VsCode中统一管理（还可修改主机在本地的命名），通过VsCode打开对应主机，就可以更加清晰直观借助GUI对文件进行操作。
 
+​	`ssh`命令不止可以实现连接，还可以配合其他语句，甚至配合管道机制进行使用
+
+```shell
+ssh "UserName"@IP_address ls -l | grep "*.iso"
+```
+
 ​	为了实现便捷的免密访问，可以利用ssh的密钥机制。
 
 ```shell
 ssh-keygen -t rsa -b 4096	//生成-t类型-b长度的一对密钥
-ssh-copy-id -i [file_address] "UserName"@IP_address	//-i指定公钥文件地址
+ssh-copy-id -i [local_address] "UserName"@IP_address	//-i 公钥地址
 ```
 
-运行第一行代码会生成一个公钥一个私钥密钥对，同时会提示你进行命名，完成命名后会设置密码用于私钥的使用。最终`.pub`文件为公钥，另一个无后缀的为私钥。可以通过`cat`（windows）或`vi`（Linux）完成公钥的读取。注意，私钥是不能随意泄露的。部署好了ssh公钥到目标主机后就可以免密登录访问目标主机文件并进行操作。
+运行第一行代码会生成一个公钥一个私钥密钥对，同时会提示你进行命名，完成命名后会设置密码用于私钥的使用。最终`.pub`文件为公钥，另一个无后缀的为私钥。可以通过`cat`（windows）或`vi`（Linux）完成公钥的读取。注意，私钥是不能随意泄露的。部署好了ssh公钥到目标主机后就可以免密登录访问目标主机文件并进行操作。运行第二行则将密钥拷贝至远程服务器并设置为免密登录。为了更方便地进行访问不必每次都输入一长串“用户名+IP”，还可以配置文件`~/.ssh/config`，之后只需要输入`ssh Server`即可
 
-**非内网连接**
+```ini
+Host Server
+	User Simon
+	HostName IP_address
+	IdentityFile ~/.ssh/[ssh_key]
+	RemoteForward localhost:
+```
 
-​	适用于进行连接的两台主机不在同一局域网下，且双方均无公网IP，但是依旧有远程进行文件管理和操作的需求。这里采用frp进行内网穿透。
+​	**文件传输**：目前最为简单直接的方法就是使用`scp`协议进行代码/程序文件的传输，不同系统（Linux/macOS/Windows）均保持一致
+
+```shell
+scp [local_file_path] [user]@[server_IP]:[server_file_path]
+scp [user]@[server_IP]:[server_file_path] [local_file_path]
+```
+
+以上是最基础的文件传输用法，第一行是将本地`local_file_path`路径下的文件传输到IP为`server_IP`服务器中名为`user`用户下的`server_file_path`地址。（这里只能传输到用户能访问的文件夹中）
+
+​	如果传输的是文件夹，则需要加参数`-r`实现文件夹的批量/递归传输，如果远程服务器并非默认端口`22`，则还需要使用参数`-P`指明网络端口，这里给出如下示例展示本地终端将一个文件夹传输到非默认端口（端口号为8088）服务器的命令行，而从服务器下载文件到本地终端则对称类似
+
+```shell
+scp -r -P 8088 [local_file_path] [user]@[server_IP]:[server_file_path]
+```
+
+​	此外，考虑到有较大文件的传输需求，`scp`协议总是在断点从头开始传输，而`rsync`命令则能够实现断点续传，并能实现检查文件是否已经存在被复制。
+
+​	**非内网连接**：适用于进行连接的两台主机不在同一局域网下，且双方均无公网IP，但是依旧有远程进行文件管理和操作的需求。这里采用frp进行内网穿透。
 
 ```shell
 sudo vim etc/hosts	//MacOS超级管理员模式下的Linux（打开后加入桥服务器IP）
@@ -1126,6 +1374,8 @@ goto home
 ```
 
 并将上述`.bat`文件的快捷方式放置在`C:\Users\[Your_User_Name]\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup`中即完成Windows系统的目标主机的自启动。
+
+​	**ZeroTier**：还有另一种可以凭借ZeroTier完成内网穿透的方法，这种方法非常简单便捷且不需要额外的公网IP服务器，实际传输速度也几乎仅和双端的网络环境有关，只需要安装ZeroTier软件即可。接下来，将参考[ZeroTier内网穿透实现远程服务器访问](https://blog.csdn.net/Leesnwen/article/details/132124196)的内容介绍这一种方案下实现稳定内网穿透的具体操作。
 
 #### · Python
 
