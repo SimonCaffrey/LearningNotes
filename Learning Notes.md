@@ -273,7 +273,11 @@ $$
 10. 链接：[Markdown语法学习视频]([12分钟学会Markdown｜附Typora使用方法_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Fg411j7CW/))
 11. 目录：在任意地方单开一段，然后输入“[TOC]”
 
-#### · Missing Class
+
+
+
+
+#### · Command Line
 
 **Shell/Bash**
 
@@ -626,8 +630,8 @@ ssh-copy-id -i [local_address] "UserName"@IP_address	//-i 公钥地址
 ```ini
 Host Server
 	User Simon
-	HostName IP_address
-	IdentityFile ~/.ssh/[ssh_key]
+	HostName [IP_address]
+	IdentityFile ~/.ssh/[ssh_key_file]
 	RemoteForward localhost:
 ```
 
@@ -1088,17 +1092,132 @@ scancel -u [user_name] -p [partition]	//设置取消某一分区的任务
 
 
 
+**MATLAB的安装使用**
 
+​	MATLAB通常要使用大量的CPU运算资源，而服务器级的CPU通常配备的是Linux系统，因此这里将从安装开始简单介绍MATLAB在Linux系统（以Ubuntu22.04为例）的安装和使用，为了使得介绍有普遍性，所以这里将主要面向无图形用户界面/无显示器的服务器（有图形用户界面或服务器的同样可以打开命令行按照这里的介绍完成安装）。下文将分别介绍有sudo权限的系统级和无sudo权限的用户级两种安装方式，并分别采用挂载和解压两种方式获取`.iso`中的文件，适用于任何场景下MATLAB安装。
 
+​	**有sudo权限的安装**：在有sudo权限的情况下，安装通常通过挂载`.iso`光盘然后读取挂载目录中的文件进行安装，因此需要先创建挂载目录，然后将`.iso`文件成功挂载在对应目录下
 
+```shell
+sudo mkdir /mnt/matlab	//创建挂载目录
+sudo mount -o loop [iso_path] /mnt/matlab	//将iso文件挂载在目录下
+```
 
+完成挂载后，进行检查，此时`/mnt/matlab`目录中应该有`install`文件，由于面向无图形用户界面，所以需要提前完善安装配置，这里展示一个安装配置的范例，其中的密钥是MATLAB2024a for Linux的可用密钥
 
+```ini
+# 安装目录
+destinationFolder=/opt/MATLAB/R2024a
 
+# 安装密钥
+fileInstallationKey=21471-07182-41807-00726-32378-34241-61866-60308-44209-03650-51035-48216-24734-36781-57695-35731-64525-44540-57877-31100-06573-50736-60034-42697-39512-63953
 
+# 本地许可证：
+licensePath=/opt/MATLAB/Linux_crack/license.lic
 
-​	
+# 同意许可协议
+agreeToLicense=yes
 
+# 安装日志
+outputFile=/opt/MATLAB/matlab_install.log
 
+# 静默安装模式
+mode=silent
+language=en_US
+enableAutomaticUpdate=no
+```
+
+​	其中安装目录需要通过`sudo mkdir`命令提前建立，许可证也要拷贝到对应的目录下，在安装模式中选择`mode=silent`进行静默安装，并禁用自动更新`enableAutomaticUpdate=no`。这里建议选取保留安装日志，在后续安装中可以查看安装日志以方便地了解软件安装的情况。
+
+​	配置完成并将配置文件`installer_input.txt`放置在合适的文件夹（这里放置在`/tmp/installer_input.txt`路径）下后，命令行切换到挂载目录下，运行程序`install`执行静默安装
+
+```shell
+cd /mnt/matlab
+sudo ./install -inputFile /tmp/installer_input.txt
+```
+
+执行上述程序后可以通过以下命令行即可便捷查询安装进展
+
+```shell
+tail -f /opt/MATLAB/matlab_install.log
+```
+
+等待安装完成后，还要将`Linux_crack`文件夹下的`libmwlmgrimpl.so`文件拷贝到`/opt/MATLAB/R2024a/bin/glnxa64/matlab_startup_plugins/lmgrimpl`目录下，如果提示没有权限或写入被拒绝，可以利用`chmod`命令更改权限，或者在`sudo`权限下可以直接使用`sudo cp [path1] [path2]`/`sudo !!`，使用`chmod`命令具体可以如下
+
+```shell
+chmod -R u+w /opt/MATLAB/R2024a
+```
+
+​	完成验证文件覆盖后，可以将MATLAB写入环境变量`export PATH=/home/your_username/MATLAB/R2024a/bin:$PATH`，并通过以下命令行无图形用户界面启动MATLAB，成功启动后会出现类似Windows端命令行那样的`>>`，即说明运行成功，后续使用就可以像在Windows端使用MATLAB内命令行一样即可
+
+```shell
+matlab -nodesktop -nosplash
+```
+
+​	安装成功后还需要解决挂载问题，运行以下代码解除挂载并清理其他安装产生的文档
+
+```shell
+sudo umount /mnt/matlab
+sudo rm -rf /tmp/matlab_installer_input.txt /mnt/matlab
+```
+
+​	**无sudo权限安装**：有无sudo权限安装的最主要区别就是是否能借助`sudo mount`命令将MATLAB的`.iso`文件成功挂载在系统的挂载目录`/mnt`下，当无sudo权限时，我们还可以利用`xorriso`解压工具将`.iso`文件进行解压，这里考虑系统中没有安装`7z`和`xorriso`两种解压工具时，需要进行用户级软件安装，这里以安装`xorriso`为例，先介绍`xorriso`的安装，然后再使用`xorriso`工具解压MATLAB安装所使用的`.iso`文件
+
+```shell
+mkdir -p ~/Downloads && cd ~/Downloads	//创建下载安装包路径
+wget https://www.gnu.org/software/xorriso/xorriso-1.5.6.tar.gz	//下载
+tar -zxvf xorriso-1.5.6.tar.gz	//解压下载安装包
+cd xorriso-1.5.6	//进入解压后的文件夹
+mkdir -p ~/local	//创建安装路径
+./configure --prefix=$HOME/local	//安装到个人目录下的local
+export PATH=$HOME/local/bin:$PATH	//设置环境变量
+xorriso --version	//验证完成安装
+```
+
+​	在自己的账户下安装完成`xorriso`后就可以正常进行解压完成安装了。这里考虑将所有的安装放在`~/MATLAB`下，`.iso`文件、`.iso`解压地址和安装文件`installer_input.txt`都在这个目录下，运行以下命令则可以将`.iso`文件通过`xorriso`工具解压到`~/MATLAB/matlab_install/`目录下
+
+```shell
+mkdir -p ~/MATLAB/matlab_install	//创建解压目录
+xorriso -osirrox on -indev [iso_path] -extract / ~/MATLAB/matlab_install
+```
+
+​	如果服务器本身自带了`7z`或者`xorriso`工具可以跳过前面的工具安装步骤，这里也同样给出基于`7z`工具的解压命令
+
+```shell
+mkdir -p ~/MATLAB/matlab_install
+7z x [iso_path] -o~/MATLAB/matlab_install	//-o后无空格
+```
+
+​	接下来可以通过`ls`命令验证是否解压成功，解压成功后`matlab_install`目录下将会有一个`install`文件，此后安装的步骤与有sudo权限的基本一致，但是由于只能安装在用户目录下，所以原有的部分设置需要修改，这里直接给出`installer_input.txt`文件的配置内容
+
+```ini
+# 安装目录
+destinationFolder=~/MATLAB/R2024a
+
+# 安装密钥
+fileInstallationKey=21471-07182-41807-00726-32378-34241-61866-60308-44209-03650-51035-48216-24734-36781-57695-35731-64525-44540-57877-31100-06573-50736-60034-42697-39512-63953
+
+# 本地许可证：
+licensePath=~/MATLAB/Linux_crack/license.lic
+
+# 同意许可协议
+agreeToLicense=yes
+
+# 安装日志
+outputFile=~/MATLAB/matlab_install.log
+
+# 静默安装模式
+mode=silent
+language=en_US
+enableAutomaticUpdate=no
+```
+
+​	接下来按照解压缩/完成挂载后的有sudo权限的安装步骤继续即可完成安装。完成安装后建议清理安装产生的部分临时文件。
+
+```shell
+rm -rf ~/MATLAB/matlab_install
+rm -f ~/MATLAB/R2024a_Linux.iso
+```
 
 ​	安装CUDA Toolkit的流程
 
@@ -1117,6 +1236,8 @@ export LD_LIBRARY_PATH=/usr/local/cuda-13.0.1/lib64${LD_LIBRARY_PATH:+:${LD_LIBR
 ```
 
 保存后使用`nvcc -V`查询是否安装成功即可。
+
+
 
 
 
@@ -1258,124 +1379,9 @@ git pull [ProjName] [BranchName2]:[BranchName1]	//从远程的分支2拉取到�
 
 ​	VsCode是常用的代码编辑器，可以通过VsCode的Git管理功能管理文件，同样可以分为工作区、暂存区和仓库区，还可以直接上传到线上。VsCode可以直接自动跟踪文件的修改和添加。
 
-#### · GitHub
 
 
 
-#### · SSH
-
-​	SSH是一种远程安全数据传输协议，需要现在Windows系统上安装OpenSSH客户端和服务器端并在后台保持开启。检验是否安装成功并且正确运行ssh
-
-```shell
-Get-Service -Name *ssh*	//抓取是否正在运行SSH（确保自动启动）
-netstat -an | findstr : 22	//确认是否正确监听22端口
-```
-
-​	**内网连接**：内网连接适用于处于同一局域网或者目标对象为公网IP的连接设备
-
-```shell
-ssh "UserName"@IP_address	//连接该IP地址中的用户"UserName"
-```
-
-这一代码可以在终端中直接使用这样就可以跳转到对应主机的终端，然后利用命令行完成操作；也可以在VsCode上安装Remote -ssh插件后，添加远程主机输入上述代码，可访问的远程主机可在VsCode中统一管理（还可修改主机在本地的命名），通过VsCode打开对应主机，就可以更加清晰直观借助GUI对文件进行操作。
-
-​	`ssh`命令不止可以实现连接，还可以配合其他语句，甚至配合管道机制进行使用
-
-```shell
-ssh "UserName"@IP_address ls -l | grep "*.iso"
-```
-
-​	为了实现便捷的免密访问，可以利用ssh的密钥机制。
-
-```shell
-ssh-keygen -t rsa -b 4096	//生成-t类型-b长度的一对密钥
-ssh-copy-id -i [local_address] "UserName"@IP_address	//-i 公钥地址
-```
-
-运行第一行代码会生成一个公钥一个私钥密钥对，同时会提示你进行命名，完成命名后会设置密码用于私钥的使用。最终`.pub`文件为公钥，另一个无后缀的为私钥。可以通过`cat`（windows）或`vi`（Linux）完成公钥的读取。注意，私钥是不能随意泄露的。部署好了ssh公钥到目标主机后就可以免密登录访问目标主机文件并进行操作。运行第二行则将密钥拷贝至远程服务器并设置为免密登录。为了更方便地进行访问不必每次都输入一长串“用户名+IP”，还可以配置文件`~/.ssh/config`，之后只需要输入`ssh Server`即可
-
-```ini
-Host Server
-	User Simon
-	HostName IP_address
-	IdentityFile ~/.ssh/[ssh_key]
-	RemoteForward localhost:
-```
-
-​	**文件传输**：目前最为简单直接的方法就是使用`scp`协议进行代码/程序文件的传输，不同系统（Linux/macOS/Windows）均保持一致
-
-```shell
-scp [local_file_path] [user]@[server_IP]:[server_file_path]
-scp [user]@[server_IP]:[server_file_path] [local_file_path]
-```
-
-以上是最基础的文件传输用法，第一行是将本地`local_file_path`路径下的文件传输到IP为`server_IP`服务器中名为`user`用户下的`server_file_path`地址。（这里只能传输到用户能访问的文件夹中）
-
-​	如果传输的是文件夹，则需要加参数`-r`实现文件夹的批量/递归传输，如果远程服务器并非默认端口`22`，则还需要使用参数`-P`指明网络端口，这里给出如下示例展示本地终端将一个文件夹传输到非默认端口（端口号为8088）服务器的命令行，而从服务器下载文件到本地终端则对称类似
-
-```shell
-scp -r -P 8088 [local_file_path] [user]@[server_IP]:[server_file_path]
-```
-
-​	此外，考虑到有较大文件的传输需求，`scp`协议总是在断点从头开始传输，而`rsync`命令则能够实现断点续传，并能实现检查文件是否已经存在被复制。
-
-​	**非内网连接**：适用于进行连接的两台主机不在同一局域网下，且双方均无公网IP，但是依旧有远程进行文件管理和操作的需求。这里采用frp进行内网穿透。
-
-```shell
-sudo vim etc/hosts	//MacOS超级管理员模式下的Linux（打开后加入桥服务器IP）
-echo [ip_address] >> C:\Windows\System32\drivers\etc\hosts	//Windows
-```
-
-根据请求联网主机的系统版本和类型不同，运行上述代码打开不同系统下的`hosts`文件，在`hosts`文件中添加桥服务器的公网IP地址（还可在添加桥服务器公网IP地址时通过`[ip_address] alias`设置该IP地址的别名，便于之后使用）
-
-​	*1.* 从github中下载开源软件frp，根据桥服务器和目标主机（服务器）的系统类型下载对应版本的frp，其中frps部分为桥服务器的程序及配置文件；frpc为目标主机的程序及配置文件（在不同设备上保留必要的文件，其余可删去）。*2.* 在配置文件中，大部分保留原有设置即可，需要时可以再读配置代码修改，这一过程需要注意和修改的只有frpc.ini文件中server_addr改为桥服务器的公网IP。*3.* 将完成修改的配置文件分别拷贝到对应设备，并根据配置文件开放云服务器上的对应端口（设置为TCP协议）
-
-​	接下来需要分别启动桥服务器和目标主机上的frp程序。在分别执行以下代码之前需要将命令行转至frps或frpc文件夹
-
-```shell
-./frps -c ./frps.ini	//启动桥服务器端的frps程序
-./frpc -c ./frpc.ini	//启动目标主机端的frpc程序
-```
-
-上述命令可能由于不同系统有细微区别，但是大致相同。配置完成后，在使用中，如果希望（经由桥服务器）连接目标主机进行操作，则需要执行以下代码
-
-```shell
-ssh -p [in_port] "UserName"@IP_address	//连接目标主机
-```
-
-运行上述代码即可完成连接。需要注意的是，其中`in_port`是指定端口，是在桥服务器端设置的入口（也就是桥服务器的配置文件说明的数据接收端口），`UserName`是目标主机的用户名，而`IP_address`是桥服务器的公网IP。
-
-​	上述过程只满足了手动启动，通过systemd中的文件可以完成自动启动。找到frps文件夹中的frps.service复制到`/lib/systemd/system/frps.service`，并将`User`一项改为当前用户的用户名（桥服务器的用户名）；`ExectStart`一项修改为`frps -c frps.ini`命令，且其中的文件应为文件的绝对路径（`pwd`可查看绝对路径）。之后运行以下代码
-
-```
-systemctl daemon-reload
-systemctl enable frps
-systemctl start frps
-systemctl status frps
-```
-
-运行上述代码期间可能需要输入多次密码，待最后一次代码执行完成后，若找到`Active:active`即配置桥服务器自启动成功。
-
-如果目标主机为Linux系统，则将上述frps改为frpc即可。
-
-如果目标主机为Windows系统，则建立一个内容如下的`.bat`文件
-
-```bat
-@echo off
-
-if not defined TAG{
-	set TAG=1
-	start wt -p "cmd" %0
-	exit
-}
-:home
-frpc -c frpc.ini
-goto home
-```
-
-并将上述`.bat`文件的快捷方式放置在`C:\Users\[Your_User_Name]\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup`中即完成Windows系统的目标主机的自启动。
-
-​	**ZeroTier**：还有另一种可以凭借ZeroTier完成内网穿透的方法，这种方法非常简单便捷且不需要额外的公网IP服务器，实际传输速度也几乎仅和双端的网络环境有关，只需要安装ZeroTier软件即可。接下来，将参考[ZeroTier内网穿透实现远程服务器访问](https://blog.csdn.net/Leesnwen/article/details/132124196)的内容介绍这一种方案下实现稳定内网穿透的具体操作。
 
 #### · Python
 
